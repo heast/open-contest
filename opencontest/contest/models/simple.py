@@ -3,6 +3,8 @@ import os
 import logging
 import shutil
 
+from opencontest.settings import BASE_DIR
+
 
 def ensureExists(file: str, isDir: bool = False):
     cur = "/"
@@ -16,7 +18,9 @@ def ensureExists(file: str, isDir: bool = False):
 
 def getKey(key: str) -> dict:
     try:
-        with open("/db" + key, "r") as f:
+        # FIXME - windows & linux friendly...
+        with open(BASE_DIR + "\\db\\" + key[1:], "r") as f:
+        # with open(/db" + key, "r") as f:
             s = f.read()
             if s[0] in ("[", "{"):
                 return json.loads(s)
