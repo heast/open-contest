@@ -1,5 +1,5 @@
-from django.http import HttpResponse
-from django.shortcuts import render
+from django.http import HttpResponse, JsonResponse
+from django.views.decorators.csrf import csrf_exempt
 
 from contest import auth, register
 from contest.UIElements.lib.htmllib import div, h2, h
@@ -12,8 +12,8 @@ def root(params, setHeader, user):
     return 302
 
 
-# TODO: start with this view
-def login(request, **params):
+@csrf_exempt
+def login(request):
     if request.method == 'GET':
         return HttpResponse(Page(
         div(cls="login-box", contents=[
@@ -28,15 +28,15 @@ def login(request, **params):
         ])
         ))
     else:
-        username = params.get('username')
-        password = params.get('password')
+        username = request.POST['username']
+        password = request.POST['password']
         user = auth.checkPassword(username, password)
         if user:
-            setHeader("Set-Cookie", f"user={user.id}")
-            setHeader("Set-Cookie", f"userType={user.type}")
-            return "ok"
+            resp = JsonResponse('ok', safe=False)
+            resp['Set-Cookie'] = f'user={user.id}; userType={user.type}'
+            return resp
         else:
-            return "Incorrect username / password"
+            return JsonResponse('Incorrect username / password', safe=False)
 
 
 def logout(params, setHeader, user):
