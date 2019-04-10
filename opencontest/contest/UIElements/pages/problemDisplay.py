@@ -1,8 +1,13 @@
 import markdown2
+from django.http import HttpResponse, JsonResponse
 
-from opencontest.contest import register
-from opencontest.contest.UIElements.lib.htmllib import UIElement, div, h2, h, h1
-from opencontest.contest.models import Problem, Contest
+from contest import register
+from contest.UIElements.lib.htmllib import UIElement, div, h2, h, h1
+from contest.UIElements.lib.page import Card, Page
+from contest.auth import logged_in_required
+from contest.models.problem import Problem
+from contest.models.contest import Contest
+from contest.models.user import User
 
 
 def formatMD(md: str) -> str:
@@ -38,20 +43,23 @@ def getSample(datum, num: int) -> Card:
     ]))
 
 
-def viewProblem(params, user):
-    problem = Problem.get(params[0])
+@logged_in_required
+def viewProblem(request, *args, **kwargs):
+    # problem = Problem.get(params[0])
+    problem = Problem.get(kwargs.get('id'))
+    user = User.get(request.COOKIES.get('user'))
 
     if not problem:
-        return ""
+        return JsonResponse(data='', safe=False)
 
     if not user.isAdmin():
         # Hide the problems till the contest begins for non-admin users
         if not Contest.getCurrent():
-            return ""
+            return JsonResponse(data='', safe=False)
         if problem not in Contest.getCurrent().problems:
-            return ""
+            return JsonResponse(data='', safe=False)
 
-    return Page(
+    return HttpResponse(Page(
         h.input(type="hidden", id="problem-id", value=problem.id),
         h2(problem.title, cls="page-title"),
         div(cls="problem-description", contents=[
@@ -67,10 +75,11 @@ def viewProblem(params, user):
             h.button("Test Code", cls="button test-samples button-white"),
             h.button("Submit Code", cls="button submit-problem")
         ])
-    )
+    ))
 
 
-def listProblems(params, user):
+@logged_in_required
+def listProblems(request):
     if Contest.getCurrent():
         contest = Contest.getCurrent()
         probCards = []
@@ -80,28 +89,28 @@ def listProblems(params, user):
                 prob.description,
                 f"/problems/{prob.id}"
             ))
-        return Page(
+        return HttpResponse(Page(
             h2("Problems", cls="page-title"),
             *probCards
-        )
+        ))
     elif Contest.getFuture():
         contest = Contest.getFuture()
-        return Page(
+        return HttpResponse(Page(
             h1("&nbsp;"),
             h1("Contest Starts in", cls="center"),
             h1(contest.start, cls="countdown jumbotron center")
-        )
+        ))
     elif Contest.getPast():
-        return Page(
+        return HttpResponse(Page(
             h1("&nbsp;"),
             h1("Contest is Over", cls="center")
-        )
-    return Page(
+        ))
+    return HttpResponse(Page(
         h1("&nbsp;"),
         h1("No Contest Created", cls="center")
-    )
+    ))
 
 
 # Convert to urls
-register.web("/problems$", "loggedin", listProblems)
+# register.web("/problems$", "loggedin", listProblems)
 register.web("/problems/([0-9a-f-]+)", "loggedin", viewProblem)
