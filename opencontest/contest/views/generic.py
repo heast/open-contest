@@ -1,18 +1,23 @@
-from django.http import HttpResponse, JsonResponse
+from django.http import HttpResponse, JsonResponse, HttpResponseRedirect
+from django.shortcuts import redirect
+from django.urls import reverse
 from django.views.decorators.csrf import csrf_exempt
 
 from contest import auth, register
 from contest.UIElements.lib.htmllib import div, h2, h
 from contest.UIElements.lib.page import Page
+from contest.auth import logged_in_required
 from contest.register import setHeader
 
 
+@logged_in_required
 def root(params, setHeader, user):
-    setHeader("Location", "/problems")
-    return 302
+    return redirect(reverse('listProblems'))
+    # setHeader("Location", "/problems")
+    # return 302
 
 
-@csrf_exempt
+# @csrf_exempt
 def login(request):
     if request.method == 'GET':
         return HttpResponse(Page(
@@ -33,20 +38,18 @@ def login(request):
         user = auth.checkPassword(username, password)
         if user:
             resp = JsonResponse('ok', safe=False)
-            resp['Set-Cookie'] = f'user={user.id}; userType={user.type}'
+            resp.set_cookie('user', user.id)
+            resp.set_cookie('userType', user.type)
             return resp
         else:
             return JsonResponse('Incorrect username / password', safe=False)
 
 
-def logout(params, setHeader, user):
-    setHeader("Location", "/login")
-    setHeader("Set-Cookie", "user=deleted; expires=Thu, 01 Jan 1970 00:00:00 GMT;")
-    setHeader("Set-Cookie", "userType=deleted; expires=Thu, 01 Jan 1970 00:00:00 GMT")
-    return 302
-
-
-# TODO: move to urls
-register.get("/", "loggedin", root)
-# register.post("/login", "any", login)
-register.get("/logout", "any", logout)
+def logout(request):
+    resp = HttpResponseRedirect('/login')
+    resp.set_cookie('user', 'deleted', expires='Thu, 01 Jan 1970 00:00:00 GMT;')
+    resp.set_cookie('userType', 'deleted', expires='Thu, 01 Jan 1970 00:00:00 GMT;')
+    # setHeader("Location", "/login")
+    # setHeader("Set-Cookie", "user=deleted; expires=Thu, 01 Jan 1970 00:00:00 GMT;")
+    # setHeader("Set-Cookie", "userType=deleted; expires=Thu, 01 Jan 1970 00:00:00 GMT")
+    return resp

@@ -1,5 +1,6 @@
 import random
-import logging
+
+from django.core.exceptions import PermissionDenied
 
 from contest.models.user import User
 
@@ -953,11 +954,11 @@ def parseCookie(cookie):
     return results
 
 
-def getUser(cookie):
+def getUser(cookie: dict):
     if cookie == None:
         return None
     # logging.debug("Parsing cookie {}".format(cookie))
-    cookie = parseCookie(cookie)
+    # cookie = parseCookie(cookie)
     if "user" in cookie:
         return User.get(cookie["user"])
     return None
@@ -975,3 +976,36 @@ def isParticipant(cookie):
     if user == None:
         return False
     return user.type == "participant"
+
+
+# ------------- view decorators -------------
+
+def logged_in_required(view):
+    """Require that a user be logged in."""
+    def wrapper(request, *args, **kwargs):
+        user = getUser(request.COOKIES)
+        if user:
+            return view(request, *args, **kwargs)
+        else:
+            raise PermissionDenied
+    return wrapper
+
+
+def participant_required(view):
+    """Require that a user be a participant."""
+    def wrapper(request, *args, **kwargs):
+        if request.COOKIES.get('userType') == 'participant':
+            return view(request, *args, **kwargs)
+        else:
+            raise PermissionDenied
+    return wrapper
+
+
+def admin_required(view):
+    """Require that a user be an admin."""
+    def wrapper(request, *args, **kwargs):
+        if request.COOKIES.get('userType') == 'admin':
+            return view(request, *args, **kwargs)
+        else:
+            raise PermissionDenied
+    return wrapper
