@@ -1,13 +1,15 @@
 import time
 
+from django.views.decorators.csrf import csrf_exempt
+
 from contest.models.message import Message
 from contest.models.user import User
 from contest import register
 from contest.UIElements.lib.htmllib import html_encode
 
 
-
-def getMessages(params, setHeader, user):
+@csrf_exempt
+def getMessages(params, setHeader, user, request):
     timestamp = float(params["timestamp"])
     newTime = time.time() * 1000
     messages = Message.messagesSince(timestamp)
@@ -37,5 +39,5 @@ def sendMessage(params, setHeader, user):
 
 
 # TODO: move to urls
-register.post("/getMessages", "loggedin", getMessages, True)
+# register.post("/getMessages", "loggedin", getMessages, True)
 register.post("/sendMessage", "loggedin", sendMessage)

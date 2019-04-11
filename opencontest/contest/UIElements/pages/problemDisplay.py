@@ -109,8 +109,3 @@ def listProblems(request):
         h1("&nbsp;"),
         h1("No Contest Created", cls="center")
     ))
-
-
-# Convert to urls
-# register.web("/problems$", "loggedin", listProblems)
-register.web("/problems/([0-9a-f-]+)", "loggedin", viewProblem)

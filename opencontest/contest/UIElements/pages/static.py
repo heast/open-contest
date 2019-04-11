@@ -1,20 +1,25 @@
+from contest.auth import admin_required
 from opencontest.contest import register
 from opencontest.contest.UIElements.lib.htmllib import div, h2, h, UIElement, h1
 from opencontest.contest.UIElements.lib.page import uuid, Page, Card
 
-register.web("/login", "any", lambda params, user: Page(
-        div(cls="login-box", contents=[
-            h2("Login", cls="login-header"),
-            h.label("Username", cls="form-label"),
-            h.input(name="username", cls="form-control"),
-            h.label("Password", cls="form-label"),
-            h.input(name="password", cls="form-control", type="password"),
-            div(cls="align-right", contents=[
-                h.button("Login", cls="button login-button")
-            ])
-        ])
-    ))
+# register.web("/login", "any", lambda params, user: Page(
+#         div(cls="login-box", contents=[
+#             h2("Login", cls="login-header"),
+#             h.label("Username", cls="form-label"),
+#             h.input(name="username", cls="form-control"),
+#             h.label("Password", cls="form-label"),
+#             h.input(name="password", cls="form-control", type="password"),
+#             div(cls="align-right", contents=[
+#                 h.button("Login", cls="button login-button")
+#             ])
+#         ])
+#     ))
 
+
+@admin_required
+def setup(request):
+    pass
 
 register.web("/setup", "admin", lambda params, user: Page(
         h2("Setup", cls="page-title"),

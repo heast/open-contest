@@ -11,8 +11,9 @@ from contest.register import setHeader
 
 
 @logged_in_required
-def root(params, setHeader, user):
-    return redirect(reverse('listProblems'))
+def root(request):
+    # return redirect(reverse('listProblems'))
+    return redirect('/problems')
     # setHeader("Location", "/problems")
     # return 302
 
