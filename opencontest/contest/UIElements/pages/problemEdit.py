@@ -1,9 +1,11 @@
 from html import escape
-import logging
+
+from django.http import HttpResponse
 
 from contest import register
 from contest.UIElements.lib.htmllib import UIElement, h2, div, h, p
 from contest.UIElements.lib.page import Modal, Card, Page
+from contest.auth import admin_required
 from contest.models.problem import Problem
 
 
@@ -13,16 +15,17 @@ class ProblemCard(UIElement):
                          delete=f"deleteProblem('{prob.id}')", cls=prob.id)
 
 
-def listProblems(params, user):
+@admin_required
+def listProblems(request):
     problems = []
     Problem.forEach(lambda prob: problems.append(ProblemCard(prob)))
-    return Page(
+    return HttpResponse(Page(
         h2("Problems", cls="page-title"),
         div(cls="actions", contents=[
             h.button("+ Create Problem", cls="button create-problem", onclick="window.location='/problems/new'")
         ]),
         div(cls="problem-cards", contents=problems)
-    )
+    ))
 
 
 class TestDataCard(UIElement):
@@ -43,10 +46,12 @@ class TestDataCard(UIElement):
         ]), cls=cls, delete=f"deleteTestData({num})")
 
 
-def editProblem(params, user):
-    probId = params[0]
+@admin_required
+def editProblem(request, *args, **kwargs):
+    # probId = params[0]
+    probId = kwargs.get('id')
     prob = Problem.get(probId)
-    return Page(
+    return HttpResponse(Page(
         h.input(type="hidden", id="prob-id", value=probId),
         h.input(type="hidden", id="pageId", value="Problem"),
         h2(prob.title, cls="page-title"),
@@ -110,11 +115,12 @@ def editProblem(params, user):
         ),
         div(cls="test-data-cards",
             contents=list(map(TestDataCard, zip(range(prob.tests), prob.testData, [prob.samples] * prob.tests))))
-    )
+    ))
 
 
-def newProblem(params, user):
-    return Page(
+@admin_required
+def newProblem(request):
+    return HttpResponse(Page(
         h.input(type="hidden", id="prob-id", value=""),
         h.input(type="hidden", id="pageId", value="Problem"),
         h2("New Problem", cls="page-title"),
@@ -155,10 +161,10 @@ def newProblem(params, user):
                 h.button("Save", cls="button", onclick="editProblem()")
             ])
         ]))
-    )
+    ))
 
 
 # TODO: Convert to urls
-register.web("/problems_mgmt", "admin", listProblems)
-register.web("/problems/([0-9a-f-]+)/edit", "admin", editProblem)
-register.web("/problems/new", "admin", newProblem)
+# register.web("/problems_mgmt", "admin", listProblems)
+# register.web("/problems/([0-9a-f-]+)/edit", "admin", editProblem)
+# register.web("/problems/new", "admin", newProblem)

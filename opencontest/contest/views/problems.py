@@ -1,5 +1,7 @@
 import json
 
+from django.http import JsonResponse
+
 from contest import register
 from contest.models.problem import Datum, Problem
 
@@ -10,27 +12,27 @@ def deleteProblem(params, setHeader, user):
     return "ok"
 
 
-def editProblem(params, setHeader, user):
-    id = params.get("id")
+def createProblem(request):
+    id = request.POST.get("id")
     problem = Problem.get(id) or Problem()
 
-    problem.title = params["title"]
-    problem.description = params["description"]
-    problem.statement = params["statement"]
-    problem.input = params["input"]
-    problem.output = params["output"]
-    problem.constraints = params["constraints"]
-    problem.samples = int(params["samples"])
+    problem.title = request.POST["title"]
+    problem.description = request.POST["description"]
+    problem.statement = request.POST["statement"]
+    problem.input = request.POST["input"]
+    problem.output = request.POST["output"]
+    problem.constraints = request.POST["constraints"]
+    problem.samples = int(request.POST["samples"])
 
-    testData = json.loads(params["testData"])
+    testData = json.loads(request.POST["testData"])
     problem.testData = [Datum(d["input"], d["output"]) for d in testData]
     problem.tests = len(testData)
 
     problem.save()
 
-    return problem.id
+    return JsonResponse(problem.id, safe=False)
 
 
 # TODO: move to urls
-register.post("/deleteProblem", "admin", deleteProblem)
-register.post("/editProblem", "admin", editProblem)
+# register.post("/deleteProblem", "admin", deleteProblem)
+# register.post("/editProblem", "admin", editProblem)

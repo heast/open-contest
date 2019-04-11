@@ -56,10 +56,10 @@ class Problem:
             self.testData = []
 
     @staticmethod
-    def get(id: str):
+    def get(id: uuid4):
         with lock.gen_rlock():
-            if id in problems:
-                return problems[id]
+            if str(id) in problems:
+                return problems[str(id)]
             return None
 
     def toJSONSimple(self):
