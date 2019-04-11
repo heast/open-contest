@@ -2,7 +2,6 @@ import json
 
 from django.http import JsonResponse
 
-from contest import register
 from contest.auth import admin_required
 from contest.models.contest import Contest
 from contest.models.problem import Problem
@@ -32,10 +31,3 @@ def createContest(request):
 
         # return contest.id
         return JsonResponse(contest.id, safe=False)
-    else:
-        pass
-
-
-# TODO: move to urls
-# register.post("/deleteContest", "admin", deleteContest)
-# register.post("/editContest", "admin", editContest)

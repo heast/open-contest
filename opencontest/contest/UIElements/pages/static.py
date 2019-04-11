@@ -1,32 +1,20 @@
-from contest.auth import admin_required
-from opencontest.contest import register
-from opencontest.contest.UIElements.lib.htmllib import div, h2, h, UIElement, h1
-from opencontest.contest.UIElements.lib.page import uuid, Page, Card
+from django.http import HttpResponse
 
-# register.web("/login", "any", lambda params, user: Page(
-#         div(cls="login-box", contents=[
-#             h2("Login", cls="login-header"),
-#             h.label("Username", cls="form-label"),
-#             h.input(name="username", cls="form-control"),
-#             h.label("Password", cls="form-label"),
-#             h.input(name="password", cls="form-control", type="password"),
-#             div(cls="align-right", contents=[
-#                 h.button("Login", cls="button login-button")
-#             ])
-#         ])
-#     ))
+from contest.auth import admin_required
+from contest import register
+from contest.UIElements.lib.htmllib import div, h2, h, UIElement, h1
+from contest.UIElements.lib.page import uuid, Page, Card
 
 
 @admin_required
 def setup(request):
-    pass
-
-register.web("/setup", "admin", lambda params, user: Page(
+    return HttpResponse(Page(
         h2("Setup", cls="page-title"),
         Card("Problems", "Create problems to go in the contests", "/problems_mgmt"),
         Card("Contests", "Create contests", "/contests"),
         Card("Users", "Create users who will participate in contests, as well as other admin users who can create and judge contests and problems", "/users")
     ))
+
 
 class FAQ(UIElement):
     def __init__(self, q, a):

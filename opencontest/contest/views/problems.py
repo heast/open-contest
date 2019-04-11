@@ -2,16 +2,18 @@ import json
 
 from django.http import JsonResponse
 
-from contest import register
+from contest.auth import admin_required
 from contest.models.problem import Datum, Problem
 
 
-def deleteProblem(params, setHeader, user):
-    id = params["id"]
+@admin_required
+def deleteProblem(request):
+    id = request.POST["id"]
     Problem.get(id).delete()
-    return "ok"
+    return JsonResponse("ok", safe=False)
 
 
+@admin_required
 def createProblem(request):
     id = request.POST.get("id")
     problem = Problem.get(id) or Problem()
@@ -31,8 +33,3 @@ def createProblem(request):
     problem.save()
 
     return JsonResponse(problem.id, safe=False)
-
-
-# TODO: move to urls
-# register.post("/deleteProblem", "admin", deleteProblem)
-# register.post("/editProblem", "admin", editProblem)
