@@ -17,9 +17,9 @@ class User:
         self.type = type
 
     @staticmethod
-    def get(id: str):
-        if id in users:
-            return users[id]
+    def get(id: uuid4):
+        if str(id) in users:
+            return users[str(id)]
         return None
 
     @staticmethod

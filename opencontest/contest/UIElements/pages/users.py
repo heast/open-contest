@@ -1,7 +1,10 @@
+from django.http import HttpResponse
+
 from contest.UIElements.lib.page import Card, Page
+from contest.auth import admin_required
 from contest.models.user import User
-from opencontest.contest import register
-from opencontest.contest.UIElements.lib.htmllib import UIElement, div, h, h2
+from contest import register
+from contest.UIElements.lib.htmllib import UIElement, div, h, h2
 
 
 class UserCard(UIElement):
@@ -27,7 +30,8 @@ class UserCard(UIElement):
         ])
 
 
-def getUsers(params, user):
+@admin_required
+def getUsers(request):
     userLists = []
     tmp = []
 
@@ -44,15 +48,11 @@ def getUsers(params, user):
     for lst in userLists:
         users.append(div(*map(UserCard, lst), cls="page-break row"))
 
-    return Page(
+    return HttpResponse(Page(
         h2("Users", cls="page-title"),
         div(cls="actions", contents=[
             h.button("+ Create Admin", cls="button button-blue create-admin", onclick="createUser('admin')"),
             h.button("+ Create Participant", cls="button create-participant", onclick="createUser('participant')")
         ]),
         div(cls="user-cards", contents=users)
-    )
-
-
-# TODO: convert to url
-register.web("/users", "admin", getUsers)
+    ))

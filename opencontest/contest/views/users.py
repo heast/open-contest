@@ -1,26 +1,25 @@
-from contest import register
-from contest.auth import generatePassword
+from django.http import JsonResponse
+
+from contest.auth import generatePassword, admin_required
 from contest.models.user import User
 
 
-def createUser(params, setHeader, user):
+@admin_required
+def createUser(request):
     newPassword = generatePassword()
     user = User(
-        params["username"],
+        request.POST["username"],
         newPassword,
-        params["type"]
+        request.POST["type"]
     )
     user.save()
-    return newPassword
+    return JsonResponse(newPassword, safe=False)
 
 
-def deleteUser(params, setHeader, user):
-    username = params["username"]
+@admin_required
+def deleteUser(request):
+    username = request.POST["username"]
     user = User.getByName(username)
     user.delete()
-    return "ok"
+    return JsonResponse("ok", safe=False)
 
-
-# TODO: move to urls
-register.post("/createUser", "admin", createUser)
-register.post("/deleteUser", "admin", deleteUser)

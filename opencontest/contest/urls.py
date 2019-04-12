@@ -4,10 +4,12 @@ from contest.UIElements.pages.contests import listContests, editContest
 from contest.UIElements.pages.problemDisplay import listProblems, viewProblem
 from contest.UIElements.pages.problemEdit import editProblem, newProblem, listProblemsAdmin
 from contest.UIElements.pages.static import setup
+from contest.UIElements.pages.users import getUsers
 from contest.views.contests import deleteContest, createContest
 from contest.views.generic import login, root, logout
 from contest.views.messages import getMessages
 from contest.views.problems import deleteProblem, createProblem
+from contest.views.users import createUser, deleteUser
 
 app_name = 'contest'
 urlpatterns = [
@@ -21,6 +23,8 @@ urlpatterns = [
     path('problems/<uuid:id>', viewProblem, name='viewProblem'),
 
     # admin
+    path('setup', setup, name='setup'),
+
     path('contests', listContests, name='listContests'),
     path('contests/<uuid:id>', editContest, name='editContestAdmin'),
     path('editContest', createContest, name='saveNewContest'),
@@ -33,6 +37,7 @@ urlpatterns = [
     path('editProblem', createProblem, name='anotherEditProblem'),
     path('deleteProblem', deleteProblem, name='deleteProblem'),
 
-    path('setup', setup, name='setup')
-
+    path('users', getUsers, name='getUsers'),
+    path('createUser', createUser, name='createUser'),
+    path('deleteUser', deleteUser, name='deleteUser')
 ]
