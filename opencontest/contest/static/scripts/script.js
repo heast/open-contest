@@ -114,7 +114,7 @@ Problem page
                 languages = JSON.parse(localStorage.languages);
                 res();
             } else {
-                $.post("/static/languages.json", {}, data => {
+                $.get("/static/languages.json", {}, data => {
                     localStorage.languages = JSON.stringify(data);
                     languages = JSON.parse(localStorage.languages);
                     res();
