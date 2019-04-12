@@ -1,28 +1,32 @@
 import time
 
+from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 
+from contest.auth import logged_in_required
 from contest.models.message import Message
 from contest.models.user import User
 from contest import register
 from contest.UIElements.lib.htmllib import html_encode
 
 
-@csrf_exempt
-def getMessages(params, setHeader, user, request):
-    timestamp = float(params["timestamp"])
+@logged_in_required
+def getMessages(request):
+    timestamp = float(request.POST["timestamp"])
+    user = User.get(request.COOKIES['user'])
     newTime = time.time() * 1000
     messages = Message.messagesSince(timestamp)
     applicable = [message.toJSON() for message in messages if
                   (message.toUser and message.toUser.id == user.id) or message.isGeneral or (
                               message.isAdmin and user.isAdmin()) or message.fromUser.id == user.id]
     applicable = sorted(applicable, key=lambda msg: msg["timestamp"], reverse=True)
-    return {
+    return JsonResponse({
         "messages": applicable,
         "timestamp": newTime
-    }
+    })
 
 
+@logged_in_required
 def sendMessage(params, setHeader, user):
     message = Message()
     message.fromUser = user
@@ -37,7 +41,7 @@ def sendMessage(params, setHeader, user):
     message.save()
     return "ok"
 
-
-# TODO: move to urls
-# register.post("/getMessages", "loggedin", getMessages, True)
-register.post("/sendMessage", "loggedin", sendMessage)
+#
+# # TODO: move to urls
+# # register.post("/getMessages", "loggedin", getMessages, True)
+# register.post("/sendMessage", "loggedin", sendMessage)
