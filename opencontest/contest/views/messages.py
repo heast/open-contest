@@ -1,12 +1,10 @@
 import time
 
 from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
 
 from contest.auth import logged_in_required
 from contest.models.message import Message
 from contest.models.user import User
-from contest import register
 from contest.UIElements.lib.htmllib import html_encode
 
 
@@ -27,21 +25,17 @@ def getMessages(request):
 
 
 @logged_in_required
-def sendMessage(params, setHeader, user):
+def sendMessage(request):
     message = Message()
+    user = User.get(request.COOKIES['user'])
     message.fromUser = user
-    message.message = html_encode(params["message"])
+    message.message = html_encode(request.POST["message"])
     message.timestamp = time.time() * 1000
     if user.isAdmin():
-        message.toUser = User.get(params["to"])
-        message.isGeneral = params["to"] == "general"
-        message.replyTo = params.get("replyTo")
+        message.toUser = User.get(request.POST["to"])
+        message.isGeneral = request.POST["to"] == "general"
+        message.replyTo = request.POST.get("replyTo")
     else:
         message.isAdmin = True
     message.save()
-    return "ok"
-
-#
-# # TODO: move to urls
-# # register.post("/getMessages", "loggedin", getMessages, True)
-# register.post("/sendMessage", "loggedin", sendMessage)
+    return JsonResponse("ok", safe=False)

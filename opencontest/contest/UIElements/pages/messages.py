@@ -1,6 +1,8 @@
-from contest import register
+from django.http import HttpResponse
+
 from contest.UIElements.lib.htmllib import UIElement, h, div, h2, a
 from contest.UIElements.lib.page import Modal, Card, Page
+from contest.auth import logged_in_required
 from contest.models.message import Message
 from contest.models.user import User
 
@@ -30,11 +32,12 @@ class MessageCard(UIElement):
 INBOX, PROCESSED, ANNOUNCEMENT = 'inbox', 'processed', 'announcements'
 
 
-def getMessages(params, user):
-    view = params[0]
+@logged_in_required
+def displayMessages(request, *args, **kwargs):
+    user = User.get(request.COOKIES['user'])
 
     messages = []
-    if view == INBOX:
+    if 'inbox' in request.path:
         if user.isAdmin():
             inbox = {}
             Message.forEach(lambda msg: inbox.update({msg.id: msg}) if msg.isAdmin else None)
@@ -47,7 +50,7 @@ def getMessages(params, user):
                     msg.toUser and msg.toUser.id == user.id or msg.fromUser == user or msg.isGeneral) else None
                             )
 
-    elif view == PROCESSED:
+    elif 'processed' in request.path:
         def addReply(msg):
             if msg.replyTo in replies:
                 replies[msg.replyTo].append(msg)
@@ -59,7 +62,7 @@ def getMessages(params, user):
         Message.forEach(lambda msg: addReply(msg) if msg.replyTo else None)
 
         messages = [[Message.get(id)] + replies[id] for id in replies.keys()]
-    elif view == ANNOUNCEMENT:
+    elif 'announcements' in request.path:
         Message.forEach(lambda msg: messages.append(msg) if msg.isGeneral else None)
 
     if len(messages) > 0 and not isinstance(messages[0], list):
@@ -90,7 +93,7 @@ def getMessages(params, user):
     else:
         filter = div()
 
-    return Page(
+    return HttpResponse(Page(
         h2("Messages", cls="page-title"),
         div(cls="actions", contents=[
             h.button("+ Send Message", cls="button create-message", onclick="createMessage()")
@@ -108,8 +111,4 @@ def getMessages(params, user):
             )
         ),
         div(cls="message-cards", contents=messages),
-    )
-
-
-# TODO: convert to url
-register.web("/messages/([a-z]+)", "loggedin", getMessages)
+    ))

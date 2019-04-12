@@ -34,10 +34,10 @@ class Message:
             self.replyTo = None
 
     @staticmethod
-    def get(id: str):
+    def get(id: uuid4):
         with lock.gen_rlock():
-            if id in messages:
-                return messages[id]
+            if str(id) in messages:
+                return messages[str(id)]
             return None
 
     def toJSONSimple(self):
