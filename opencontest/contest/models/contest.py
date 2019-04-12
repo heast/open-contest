@@ -33,8 +33,8 @@ class Contest:
     @staticmethod
     def get(id: str):
         with lock.gen_rlock():
-            if id in contests:
-                return contests[id]
+            if str(id) in contests:
+                return contests[str(id)]
             return None
 
     def toJSONSimple(self):

@@ -2,7 +2,7 @@ from django.urls import path
 
 from contest.UIElements.pages.contests import listContests, editContest
 from contest.UIElements.pages.problemDisplay import listProblems, viewProblem
-from contest.UIElements.pages.problemEdit import editProblem, newProblem
+from contest.UIElements.pages.problemEdit import editProblem, newProblem, listProblemsAdmin
 from contest.UIElements.pages.static import setup
 from contest.views.contests import deleteContest, createContest
 from contest.views.generic import login, root, logout
@@ -22,12 +22,12 @@ urlpatterns = [
 
     # admin
     path('contests', listContests, name='listContests'),
-    path('contests/<uuid:id>', editContest, name='editContest'),
+    path('contests/<uuid:id>', editContest, name='editContestAdmin'),
     path('editContest', createContest, name='saveNewContest'),
     path('contests/new', editContest, name='createNewContest'),
     path('deleteContest', deleteContest, name='deleteContest'),
 
-    path('problems_mgmt', listProblems, name='adminListProblems'),
+    path('problems_mgmt', listProblemsAdmin, name='adminListProblems'),
     path('problems/new', newProblem, name='newProblem'),
     path('problems/<uuid:id>/edit', editProblem, name='editProblem'),
     path('editProblem', createProblem, name='anotherEditProblem'),

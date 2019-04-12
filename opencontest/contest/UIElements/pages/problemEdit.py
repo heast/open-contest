@@ -16,7 +16,7 @@ class ProblemCard(UIElement):
 
 
 @admin_required
-def listProblems(request):
+def listProblemsAdmin(request):
     problems = []
     Problem.forEach(lambda prob: problems.append(ProblemCard(prob)))
     return HttpResponse(Page(

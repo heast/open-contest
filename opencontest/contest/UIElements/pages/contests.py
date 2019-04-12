@@ -1,9 +1,7 @@
 import time
 
 from django.http import HttpResponse
-from django.shortcuts import redirect
 
-from contest import register
 from contest.UIElements.lib.htmllib import UIElement, div, h, h2
 from contest.UIElements.lib.page import Modal, Card, Page
 from contest.auth import admin_required
@@ -45,12 +43,7 @@ class ProblemCard(UIElement):
 
 @admin_required
 def editContest(request, *args, **kwargs):
-    # if request.method == 'POST':
-    #     redirect('contests', kwargs={'uuid': kwargs.get('id')})
-    # else:
-    #     pass
 
-    # id = params[0] if params else None
     id = kwargs.get('id')
     contest = Contest.get(id)
 
@@ -129,10 +122,3 @@ def editContest(request, *args, **kwargs):
         ])),
         *existingProblems
     ))
-
-
-# # TODO: move these to urls
-# register.web("/contests$", "admin", listContests)
-# register.web("/contests/([a-f0-9-]*)", "admin", editContest)
-# TODO: ?? figure this out? why two editContest functions?
-register.web("/contests/new", "admin", editContest)

@@ -7,7 +7,7 @@ from contest.UIElements.lib.page import uuid, Page, Card
 
 
 @admin_required
-def setup(request):
+def setup(request, *args, **kwargs):
     return HttpResponse(Page(
         h2("Setup", cls="page-title"),
         Card("Problems", "Create problems to go in the contests", "/problems_mgmt"),

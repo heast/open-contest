@@ -1,5 +1,7 @@
 import markdown2
 from django.http import HttpResponse, JsonResponse
+from django.shortcuts import redirect
+from django.urls import reverse
 
 from contest import register
 from contest.UIElements.lib.htmllib import UIElement, div, h2, h, h1
