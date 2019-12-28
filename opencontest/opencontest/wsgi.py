@@ -11,6 +11,17 @@ import os
 
 from django.core.wsgi import get_wsgi_application
 
+from contest.auth import generatePassword
+from contest.models.user import User
+
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'opencontest.settings')
 
+user = 'Admin'
+password = generatePassword()
+usr = User(user, password, 'admin')
+usr.save()
+print(f'Admin username is "{user}".')
+print(f'Admin password is "{password}".')
+
+print('Starting server...')
 application = get_wsgi_application()
