@@ -26,13 +26,24 @@ class FAQ(UIElement):
         )
 
 # Fake privacy policy for laughs
-register.web("/privacy2", "any", lambda params, user: Page(
+# register.web("/privacy2", "any", lambda params, user: Page(
+#         h2("Privacy Policy", cls="page-title"),
+#         h1("LOL", cls="jumbotron center"),
+#         h1("After all, you use Facebook", cls="center")
+#     ))
+
+
+def fake_privacy(request):
+    return HttpResponse(Page(
         h2("Privacy Policy", cls="page-title"),
         h1("LOL", cls="jumbotron center"),
         h1("After all, you use Facebook", cls="center")
     ))
 
-register.web("/privacy", "any", lambda params, user: Page(
+
+# register.web("/privacy", "any", lambda params, user: Page(
+def privacy(request):
+    return HttpResponse(Page(
         h2("Privacy Policy", cls="page-title"),
         Card("TL;DR", "OpenContest as an organization is too lazy to steal your data (we're busy enough keeping track of our own). " +
              "However, the organizers of your contest may collect any data you submit, " +
@@ -63,7 +74,9 @@ register.web("/privacy", "any", lambda params, user: Page(
 
 
     # Instructions about using OpenContest
-register.web("/faqs", "any", lambda params, user: Page(
+# register.web("/faqs", "any", lambda params, user: Page(
+def faqs(request):
+    return HttpResponse(Page(
         h2("FAQs", cls="page-title"),
         FAQ("What is a programming contest?", """A programming contest is a contest where programmers 
             attempt to solve problems by writing programs. These problems are typically posed as a 

@@ -1,6 +1,9 @@
+from django.http import HttpResponse
+
 from contest import register
 from contest.UIElements.lib.htmllib import UIElement, h, div, h1, h2
 from contest.UIElements.lib.page import Page
+from contest.auth import admin_required
 from contest.models.contest import Contest
 from contest.models.submission import Submission
 
@@ -163,15 +166,16 @@ class SubmissionTable(UIElement):
         )
 
 
-def judge(params, user):
+@admin_required
+def judge(request, *args, **kwargs):
     cont = Contest.getCurrent()
     if not cont:
-        return Page(
+        return HttpResponse(Page(
             h1("&nbsp;"),
             h1("No Contest Available", cls="center")
-        )
+        ))
 
-    return Page(
+    return HttpResponse(Page(
         h2("Judge Submissions", cls="page-title"),
         div(id="judge-table", contents=[
             SubmissionTable(cont)
@@ -181,13 +185,14 @@ def judge(params, user):
                 div(id="modal-content")
             ])
         ])
-    )
+    ))
 
 
-def judge_submission(params, user):
-    return SubmissionCard(Submission.get(params[0]))
+@admin_required
+def judge_submission(request, *args, **kwargs):
+    return HttpResponse(SubmissionCard(Submission.get(kwargs.get('id'))))
 
 
-# TODO: convert to urls
-register.web("/judgeSubmission/([a-zA-Z0-9-]*)", "admin", judge_submission)
-register.web("/judge", "admin", judge)
+# TODO: test
+# register.web("/judgeSubmission/([a-zA-Z0-9-]*)", "admin", judge_submission)
+# register.web("/judge", "admin", judge)

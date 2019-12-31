@@ -4,9 +4,13 @@ import shutil
 import re
 from uuid import uuid4
 
+from django.http import JsonResponse
+
 from contest import register
+from contest.auth import logged_in_required, admin_required
 from contest.models.problem import Problem
 from contest.models.submission import Submission
+from contest.models.user import User
 
 
 def addSubmission(probId, lang, code, user, type):
@@ -115,36 +119,44 @@ def runCode(sub):
     shutil.rmtree(f"/tmp/{sub.id}", ignore_errors=True)
 
 
-def submit(params, setHeader, user):
-    probId = params["problem"]
-    lang = params["language"]
-    code = params["code"]
-    type = params["type"]
-    submission = addSubmission(probId, lang, code, user, type)
-    runCode(submission)
-    return submission.toJSON()
+@logged_in_required
+def submit(request, *args, **kwargs):
+    if request.method == 'POST':
+        probId = request.POST["problem"]
+        lang = request.POST["language"]
+        code = request.POST["code"]
+        type = request.POST["type"]
+        user = User.getByName(request.COOKIES['user'])
+        submission = addSubmission(probId, lang, code, user, type)
+        runCode(submission)
+        return submission.toJSON()
 
 
-def changeResult(params, setHeader, user):
-    id = params["id"]
-    sub = Submission.get(id)
-    if not sub:
-        return "Error: incorrect id"
-    sub.result = params["result"]
-    sub.save()
-    return "ok"
+@admin_required
+def changeResult(request, *args, **kwargs):
+    if request.method == 'POST':
+        id = request.POST["id"]
+        sub = Submission.get(id)
+        if not sub:
+            # return "Error: incorrect id"
+            return JsonResponse('Error: incorrect id', safe=False)
+        sub.result = request.POST["result"]
+        sub.save()
+        # return "ok"
+        return JsonResponse('ok', safe=False)
 
 
-def rejudge(params, setHeader, user):
-    id = params["id"]
+@admin_required
+def rejudge(request):
+    id = request.POST["id"]
     submission = Submission.get(id)
     if os.path.exists(f"/tmp/{id}"):
         shutil.rmtree(f"/tmp/{id}")
     runCode(submission)
-    return submission.result
+    return JsonResponse(submission.result, safe=False)
 
 
-# TODO: move to urls
-register.post("/submit", "loggedin", submit)
-register.post("/changeResult", "admin", changeResult)
-register.post("/rejudge", "admin", rejudge)
+# TODO: test this functionality
+# register.post("/submit", "loggedin", submit)
+# register.post("/changeResult", "admin", changeResult)
+# register.post("/rejudge", "admin", rejudge)

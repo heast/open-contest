@@ -1,8 +1,11 @@
+from django.http import HttpResponse
+
 from contest import register
 from contest.UIElements.lib.htmllib import UIElement, h, h2
 from contest.UIElements.lib.page import Card, Page
 from contest.models.contest import Contest
 from contest.models.submission import Submission
+from contest.models.user import User
 
 
 class SubmissionDisplay(UIElement):
@@ -21,24 +24,25 @@ class SubmissionDisplay(UIElement):
         ], cls=cls)
 
 
-def getSubmissions(params, user):
+def getSubmissions(request, *args, **kwargs):
     submissions = []
 
     cont = Contest.getCurrent()
     if not cont:
-        return ""
+        return HttpResponse('')
 
+    user = User.getByName(request.COOKIES['user'])
     Submission.forEach(
         lambda x: submissions.append(x) if x.user.id == user.id and cont.start <= x.timestamp <= cont.end else None)
     if len(submissions) == 0:
-        return Page(
+        return HttpResponse(Page(
             h2("No Submissions Yet", cls="page-title"),
-        )
-    return Page(
+        ))
+    return HttpResponse(Page(
         h2("Your Submissions", cls="page-title"),
         *map(SubmissionDisplay, submissions)
-    )
+    ))
 
 
-# TODO: convert to url
-register.web("/submissions", "loggedin", getSubmissions)
+# TODO: test
+# register.web("/submissions", "loggedin", getSubmissions)

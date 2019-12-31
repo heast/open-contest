@@ -1,25 +1,29 @@
 import time
 
-from contest import register
+from django.http import HttpResponse
+
 from contest.UIElements.lib.htmllib import h1, h, h2
 from contest.UIElements.lib.page import Page
+from contest.auth import logged_in_required
 from contest.models.contest import Contest
 from contest.models.submission import Submission
-from src.main import User
+from contest.models.user import User
 
 
-def leaderboard(params, user):
+@logged_in_required
+def leaderboard(request):
     contest = Contest.getCurrent() or Contest.getPast()
+    user = User.get(request.COOKIES['user'])
     if not contest:
-        return Page(
+        return HttpResponse(Page(
             h1("&nbsp;"),
             h1("No Contest Available", cls="center")
-        )
+        ))
     elif contest.scoreboardOff <= time.time() * 1000 and not user.isAdmin():
-        return Page(
+        return HttpResponse(Page(
             h1("&nbsp;"),
             h1("Scoreboard is off.", cls="center")
-        )
+        ))
 
     start = contest.start
     end = contest.end
@@ -73,7 +77,7 @@ def leaderboard(params, user):
             h.td(problemSummary[problem.id][1], cls="center")
         ))
 
-    return Page(
+    return HttpResponse(Page(
         h2("Leaderboard", cls="page-title"),
         h.table(
             h.thead(
@@ -102,9 +106,8 @@ def leaderboard(params, user):
             h.tbody(
                 *problemSummaryDisplay
             )
-
         )
-    )
+    ))
 
 
 def score(submissions: list, contestStart, problemSummary) -> tuple:
@@ -167,5 +170,5 @@ def score(submissions: list, contestStart, problemSummary) -> tuple:
     return solvedProbs, sampleProbs, int(penPoints)
 
 
-# TODO: convert into url
-register.web("/leaderboard", "loggedin", leaderboard)
+# TODO: test
+# register.web("/leaderboard", "loggedin", leaderboard)
