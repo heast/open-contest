@@ -133,7 +133,6 @@ def faqs(request):
                 <li><a target="_blank" href="https://en.cppreference.com/w/">C++</a></li>
                 <li><a target="_blank" href="https://docs.microsoft.com/en-us/dotnet/csharp/language-reference/">C#</a></li>
                 <li><a target="_blank" href="https://docs.oracle.com/javase/8/docs/api/">Java</a></li>
-                <li><a target="_blank" href="https://docs.python.org/2/library/">Python 2</a></li>
                 <li><a target="_blank" href="https://docs.python.org/3/library/">Python 3</a></li>
                 <li><a target="_blank" href="https://ruby-doc.org/stdlib-2.5.3/">Ruby</a></li>
                 </ul>"""),
