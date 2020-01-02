@@ -72,7 +72,7 @@ def runCode(sub):
 
     # Run the runner
     if os.system(
-            f"docker run --rm --network=none -m 256MB -v /tmp/{sub.id}/:/source nathantheinventor/open-contest-dev-{sub.language}-runner {tests} 5 > /tmp/{sub.id}/result.txt") != 0:
+            f"docker run --rm --network=none -m 256MB -v /tmp/{sub.id}/:/source heast/oc-test-{sub.language}-runner {tests} 5 > /tmp/{sub.id}/result.txt") != 0:
         raise Exception("Something went wrong")
 
     inputs = []
@@ -126,10 +126,10 @@ def submit(request, *args, **kwargs):
         lang = request.POST["language"]
         code = request.POST["code"]
         type = request.POST["type"]
-        user = User.getByName(request.COOKIES['user'])
+        user = User.get(request.COOKIES['user'])
         submission = addSubmission(probId, lang, code, user, type)
         runCode(submission)
-        return submission.toJSON()
+        return JsonResponse(submission.toJSON())
 
 
 @admin_required

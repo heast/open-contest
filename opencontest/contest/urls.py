@@ -35,7 +35,7 @@ urlpatterns = [
     path('problems', listProblems, name='listProblems'),
     path('problems/<uuid:id>', viewProblem, name='viewProblem'),
     path('leaderboard', leaderboard, name='leaderboard'),
-    path('submit', submit, 'submit'),
+    path('submit', submit, name='submit'),
     path('submissions', getSubmissions, name='getSubmissions'),
 
     # admin
