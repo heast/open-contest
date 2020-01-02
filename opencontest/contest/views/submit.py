@@ -34,7 +34,6 @@ exts = {
     "cpp": "cpp",
     "cs": "cs",
     "java": "java",
-    "python2": "py",
     "python3": "py",
     "ruby": "rb",
     "vb": "vb"
