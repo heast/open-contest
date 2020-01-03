@@ -987,7 +987,8 @@ def logged_in_required(view):
         if user:
             return view(request, *args, **kwargs)
         else:
-            raise PermissionDenied
+            from contest.views.generic import login
+            return login(request)
     return wrapper
 
 
