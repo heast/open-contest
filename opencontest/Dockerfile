@@ -31,5 +31,6 @@ COPY runserver.sh /runserver.sh
 
 ENTRYPOINT ["uwsgi", "--threads", "10", "--http", "0.0.0.0:8000", "--module", "opencontest.wsgi"]
 
-# Note: use the following run command:
-# sudo docker run -v ~/open-contest/db:/db -p 8000:8000 [name]
+# Note: use the following build and run commands:
+# sudo docker build --rm=true --force-rm=true -t [name:tag] .
+# sudo docker run -v /tmp:/tmp -v /path/to/db:/db -v /var/run/docker.sock:/var/run/docker.sock -p :8000:8000 [name]
