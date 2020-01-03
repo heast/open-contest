@@ -3,7 +3,6 @@ from django.http import HttpResponse
 from contest.UIElements.lib.page import Card, Page
 from contest.auth import admin_required
 from contest.models.user import User
-from contest import register
 from contest.UIElements.lib.htmllib import UIElement, div, h, h2
 
 

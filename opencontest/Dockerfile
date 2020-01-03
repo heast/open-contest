@@ -17,11 +17,7 @@ FROM ubuntu:bionic
 # Install dependencies.
 COPY setup.sh /setup.sh
 RUN ./setup.sh
-# RUN apt-get update && \
-#     apt-get -y install nodejs npm python3 python3-pip docker.io psmisc nginx
-# RUN npm install -g nodemon
-# RUN addgroup --system contest && adduser --system --group contest contest
-# RUN pip3 install markdown2 uwsgi readerwriterlock
+
 ADD requirements.txt /requirements.txt
 RUN pip3 install -r requirements.txt
 
@@ -29,21 +25,11 @@ RUN pip3 install -r requirements.txt
 RUN ln -s $PROJECT_PATH/nginx.conf /etc/nginx/sites-enabled/
 # RUN ln -s -f /usr/bin/python3 /usr/bin/python
 
-# Tell docker to allow nginx access to the following ports:
-# nginx's natural habitat
-#EXPOSE 80
-## uwsgi listens on 8001, users access on 8000.
-#EXPOSE 8000
-#EXPOSE 8001
-
 COPY . $PROJECT_PATH/
 COPY uwsgi_params /uwsgi_params
 COPY runserver.sh /runserver.sh
 
-# original
-#ENTRYPOINT [ "uwsgi", "--threads", "10", "--http", "0.0.0.0:8000", "--static-map", "/static=/code/serve", "--module", "code", "--log-5xx", "--disable-logging" ]
-#CMD ["nginx"]
 ENTRYPOINT ["uwsgi", "--threads", "10", "--http", "0.0.0.0:8000", "--module", "opencontest.wsgi"]
 
-# Use the following run command:
-# sudo docker run -p 8000:8000 oc-test:2
+# Note: use the following run command:
+# sudo docker run -v ~/open-contest/db:/db -p 8000:8000 [name]

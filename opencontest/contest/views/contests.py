@@ -26,8 +26,6 @@ def createContest(request):
         contest.end = int(request.POST.get("end"))
         contest.scoreboardOff = int(request.POST.get("scoreboardOff"))
         contest.problems = [Problem.get(id) for id in json.loads(request.POST.get("problems"))]
-
         contest.save()
 
-        # return contest.id
         return JsonResponse(contest.id, safe=False)

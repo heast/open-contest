@@ -6,7 +6,6 @@ from uuid import uuid4
 
 from django.http import JsonResponse
 
-from contest import register
 from contest.auth import logged_in_required, admin_required
 from contest.models.problem import Problem
 from contest.models.submission import Submission
@@ -137,11 +136,9 @@ def changeResult(request, *args, **kwargs):
         id = request.POST["id"]
         sub = Submission.get(id)
         if not sub:
-            # return "Error: incorrect id"
             return JsonResponse('Error: incorrect id', safe=False)
         sub.result = request.POST["result"]
         sub.save()
-        # return "ok"
         return JsonResponse('ok', safe=False)
 
 
@@ -156,6 +153,5 @@ def rejudge(request):
 
 
 # TODO: test this functionality
-# register.post("/submit", "loggedin", submit)
 # register.post("/changeResult", "admin", changeResult)
 # register.post("/rejudge", "admin", rejudge)

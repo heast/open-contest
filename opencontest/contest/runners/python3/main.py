@@ -1,14 +1,16 @@
 from threading import Timer, Thread
-import time
 import os
 import sys
+
 
 def kill():
     print("TLE")
     exit(1)
 
+
 testCases = int(sys.argv[1])
 timeLimit = int(sys.argv[2])
+
 
 def runCode(timeout):
     if os.system("python3.8 -m py_compile /source/code.py > /source/out/compile_out.txt 2> /source/out/compile_error.txt") != 0:
@@ -24,6 +26,7 @@ def runCode(timeout):
     print("ok")
     timeout.cancel()
     exit(0)
+
 
 timeout = Timer(timeLimit, kill)
 timeout.start()

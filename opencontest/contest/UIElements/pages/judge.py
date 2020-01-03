@@ -1,6 +1,5 @@
 from django.http import HttpResponse
 
-from contest import register
 from contest.UIElements.lib.htmllib import UIElement, h, div, h1, h2
 from contest.UIElements.lib.page import Page
 from contest.auth import admin_required

@@ -22,7 +22,14 @@ urlpatterns = [
     path('privacy', privacy, name='privacy'),
     path('privacy2', fake_privacy, name='fake_privacy'),
     path('faqs', faqs, name='faqs'),
+
+    # logged in required
+    path('', root, name='root'),
     path('logout', logout, name='logout'),
+
+    path('problems', listProblems, name='listProblems'),
+    path('problems/<uuid:id>', viewProblem, name='viewProblem'),
+
     path('getMessages', getMessages, name='getMessages'),
     path('sendMessage', sendMessage, name='sendMessage'),
     path('messages/<uuid:id>', displayMessages, name='displayMessages'),
@@ -30,13 +37,10 @@ urlpatterns = [
     path('messages/processed', displayMessages, name='processed'),
     path('messages/announcements', displayMessages, name='announcements'),
 
-    # logged in required
-    path('', root, name='root'),
-    path('problems', listProblems, name='listProblems'),
-    path('problems/<uuid:id>', viewProblem, name='viewProblem'),
-    path('leaderboard', leaderboard, name='leaderboard'),
     path('submit', submit, name='submit'),
     path('submissions', getSubmissions, name='getSubmissions'),
+
+    path('leaderboard', leaderboard, name='leaderboard'),
 
     # admin
     path('setup', setup, name='setup'),

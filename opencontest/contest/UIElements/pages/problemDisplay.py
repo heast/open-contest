@@ -1,9 +1,6 @@
 import markdown2
 from django.http import HttpResponse, JsonResponse
-from django.shortcuts import redirect
-from django.urls import reverse
 
-from contest import register
 from contest.UIElements.lib.htmllib import UIElement, div, h2, h, h1
 from contest.UIElements.lib.page import Card, Page
 from contest.auth import logged_in_required
@@ -47,7 +44,6 @@ def getSample(datum, num: int) -> Card:
 
 @logged_in_required
 def viewProblem(request, *args, **kwargs):
-    # problem = Problem.get(params[0])
     problem = Problem.get(kwargs.get('id'))
     user = User.get(request.COOKIES.get('user'))
 

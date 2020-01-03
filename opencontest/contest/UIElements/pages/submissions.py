@@ -1,6 +1,5 @@
 from django.http import HttpResponse
 
-from contest import register
 from contest.UIElements.lib.htmllib import UIElement, h, h2
 from contest.UIElements.lib.page import Card, Page
 from contest.models.contest import Contest
@@ -42,7 +41,3 @@ def getSubmissions(request, *args, **kwargs):
         h2("Your Submissions", cls="page-title"),
         *map(SubmissionDisplay, submissions)
     ))
-
-
-# TODO: test
-# register.web("/submissions", "loggedin", getSubmissions)

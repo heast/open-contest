@@ -1,5 +1,3 @@
-
-
 from datetime import datetime
 from uuid import uuid4
 
@@ -86,12 +84,6 @@ class Page(UIElement):
                 Footer()
             )
         )
-
-    # def setTitle(title):
-    #     Page.title = title
-    #     from code.generator.pages.static import generateStatic
-    #     # from opencontest.contest.UIElements.pages.static import
-    #     generateStatic()
 
 
 class Card(UIElement):

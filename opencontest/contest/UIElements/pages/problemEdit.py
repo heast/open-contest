@@ -2,7 +2,6 @@ from html import escape
 
 from django.http import HttpResponse
 
-from contest import register
 from contest.UIElements.lib.htmllib import UIElement, h2, div, h, p
 from contest.UIElements.lib.page import Modal, Card, Page
 from contest.auth import admin_required
@@ -48,7 +47,6 @@ class TestDataCard(UIElement):
 
 @admin_required
 def editProblem(request, *args, **kwargs):
-    # probId = params[0]
     probId = kwargs.get('id')
     prob = Problem.get(probId)
     return HttpResponse(Page(

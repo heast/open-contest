@@ -1,24 +1,17 @@
 from django.http import HttpResponse, JsonResponse, HttpResponseRedirect
 from django.shortcuts import redirect
-from django.urls import reverse
-from django.views.decorators.csrf import csrf_exempt
 
-from contest import auth, register
+from contest import auth
 from contest.UIElements.lib.htmllib import div, h2, h
 from contest.UIElements.lib.page import Page
 from contest.auth import logged_in_required
-from contest.register import setHeader
 
 
 @logged_in_required
 def root(request):
-    # return redirect(reverse('listProblems'))
     return redirect('/problems')
-    # setHeader("Location", "/problems")
-    # return 302
 
 
-# @csrf_exempt
 def login(request):
     if request.method == 'GET':
         return HttpResponse(Page(
@@ -50,7 +43,4 @@ def logout(request):
     resp = HttpResponseRedirect('/login')
     resp.set_cookie('user', 'deleted', expires='Thu, 01 Jan 1970 00:00:00 GMT;')
     resp.set_cookie('userType', 'deleted', expires='Thu, 01 Jan 1970 00:00:00 GMT;')
-    # setHeader("Location", "/login")
-    # setHeader("Set-Cookie", "user=deleted; expires=Thu, 01 Jan 1970 00:00:00 GMT;")
-    # setHeader("Set-Cookie", "userType=deleted; expires=Thu, 01 Jan 1970 00:00:00 GMT")
     return resp

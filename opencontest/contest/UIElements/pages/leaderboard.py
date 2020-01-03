@@ -168,7 +168,3 @@ def score(submissions: list, contestStart, problemSummary) -> tuple:
 
     # The user's score is dependent on the number of solved problems and the number of penalty points
     return solvedProbs, sampleProbs, int(penPoints)
-
-
-# TODO: test
-# register.web("/leaderboard", "loggedin", leaderboard)

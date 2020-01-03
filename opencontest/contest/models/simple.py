@@ -43,6 +43,5 @@ def listSubKeys(key: str) -> list:
     return [x for x in os.listdir("../db" + key) if not x.startswith(".")]
 
 
-
 def deleteKey(key: str):
     shutil.rmtree("../db" + key, ignore_errors=True)
