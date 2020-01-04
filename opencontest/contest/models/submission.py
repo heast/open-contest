@@ -46,7 +46,8 @@ class Submission:
             self.result = []
 
     @staticmethod
-    def get(id: str):
+    def get(id: uuid4):
+        id = str(id)
         with lock.gen_rlock():
             if id in submissions:
                 return submissions[id]
