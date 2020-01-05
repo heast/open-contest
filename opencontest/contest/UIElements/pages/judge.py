@@ -190,8 +190,3 @@ def judge(request, *args, **kwargs):
 @admin_required
 def judge_submission(request, *args, **kwargs):
     return HttpResponse(SubmissionCard(Submission.get(kwargs.get('id'))))
-
-
-# TODO: test
-# register.web("/judgeSubmission/([a-zA-Z0-9-]*)", "admin", judge_submission)
-# register.web("/judge", "admin", judge)

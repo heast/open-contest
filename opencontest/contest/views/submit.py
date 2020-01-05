@@ -150,8 +150,3 @@ def rejudge(request):
         shutil.rmtree(f"/tmp/{id}")
     runCode(submission)
     return JsonResponse(submission.result, safe=False)
-
-
-# TODO: test this functionality
-# register.post("/changeResult", "admin", changeResult)
-# register.post("/rejudge", "admin", rejudge)
