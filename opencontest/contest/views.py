@@ -931,7 +931,7 @@
 #     # Based on sampling of 1000 runs, this should take fewer than 10 iterations through the loop
 #     # As more than half of the generated passwords were <= 33 characters
 #     while len(password) > 32:
-#         password = f"{word()} {word()} {word()} {word()}"
+#         password = f"{word()} {word()}"
 #     return password
 #
 #
