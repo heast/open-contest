@@ -1,39 +1,44 @@
-from code.util.db import Submission, User, Contest, Problem
-from code.generator.lib.htmllib import *
-from code.generator.lib.page import *
-import logging
-from code.util import register
 import time
+from datetime import datetime
+
+from django.http import HttpResponse
+
+from contest.auth import logged_in_required
+from contest.models.contest import Contest
+from contest.models.submission import Submission
+from contest.models.user import User
+from contest.pages.lib import Page
+from contest.pages.lib.htmllib import h1, h, h2, div
 
 all_languages = {
     "c": "C",
     "cpp": "C++",
     "cs": "C#",
     "java": "Java",
-    "python2":"Python 2",
-    "python3":"Python 3",
+    "python3": "Python 3",
     "ruby": "Ruby",
-    "vb":"Visual Basic"
+    "vb": "Visual Basic"
 }
 
 
-def leaderboard(params, user):
+@logged_in_required
+def leaderboard(request):
     contest = Contest.getCurrent() or Contest.getPast()
+    user = User.get(request.COOKIES['user'])
     if not contest:
-        return Page(
+        return HttpResponse(Page(
             h1("&nbsp;"),
             h1("No Contest Available", cls="center")
-        )
+        ))
     elif contest.scoreboardOff <= time.time() * 1000 and not user.isAdmin():
-        return Page(
+        return HttpResponse(Page(
             h1("&nbsp;"),
             h1("Scoreboard is off.", cls="center")
-        )
+        ))
 
     start = contest.start
     end = contest.end
 
-    
     subs = {}
     for sub in Submission.all():
         if start <= sub.timestamp <= end and not sub.user.isAdmin():
@@ -83,10 +88,10 @@ def leaderboard(params, user):
             h.td(problemSummary[problem.id][1], cls="center")
         ))
 
-    return Page(
+    return HttpResponse(Page(
         h2("Leaderboard", cls="page-title"),
         div(cls="actions", contents=[
-            h.button("Detailed Contest Report", cls="button create-message",onclick="window.location.href='/contestreport'")
+            h.button("Detailed Contest Report", cls="button create-message", onclick="window.location.href='/contestreport'")
         ]),
         h.table(
             h.thead(
@@ -121,15 +126,16 @@ def leaderboard(params, user):
             h.button("Correct Log", cls="button", onclick="window.location='/correctlog'")
         ] if user.isAdmin() else []
         )
-    )
+    ))
 
-def contestreport(params, user):
+
+def contestreport(request):
     contest = Contest.getCurrent() or Contest.getPast()
     if not contest:
-        return Page(
+        return HttpResponse(Page(
             h1("&nbsp;"),
             h1("No Contest Available", cls="center")
-        )
+        ))
     
     start = contest.start
     end = contest.end
@@ -140,13 +146,11 @@ def contestreport(params, user):
         if start <= sub.timestamp <= end and not sub.user.isAdmin():
             subs[sub.user.id] = subs.get(sub.user.id) or []
             subs[sub.user.id].append(sub)  
-            
-    
+
     if start <= time.time() <= end:
-        reportcols = [h.th("Rank"),h.th("Contestant"),h.th("Contestant ID"),h.th("Correct"),h.th("Penalty"),]
+        reportcols = [h.th("Rank"), h.th("Contestant"), h.th("Contestant ID"), h.th("Correct"), h.th("Penalty"), ]
     else:
-        reportcols = [h.th("Rank"),h.th("Contestant ID"),h.th("Correct"),h.th("Penalty"),]
-        
+        reportcols = [h.th("Rank"), h.th("Contestant ID"), h.th("Correct"), h.th("Penalty"), ]
 
     problemSummary = {}
     problems = []
@@ -178,11 +182,10 @@ def contestreport(params, user):
         u2 = scores[i - 1]
         if (u1[1], u1[2], u1[3]) == (u2[1], u2[2], u2[3]):
             ranks[i] = ranks[i - 1]
-    
 
     log = []
     for (name, solved, samples, points, attempts, userid), rank in zip(scores, ranks):
-        log.append({"rank":rank,"name":name,"userid":userid, "solved":solved, "points":points})
+        log.append({"rank": rank, "name": name, "userid": userid, "solved": solved, "points": points})
     
     deatiledContestDisplay = []
     for person in log:
@@ -209,7 +212,8 @@ def contestreport(params, user):
             elif p_trys:      
                 outproblems.append(h.td(f"({p_trys}) -- "))
                 for prob in problemSummaryreport:
-                    if prob['id'] == p:prob["attempts"] += p_trys
+                    if prob['id'] == p:
+                        prob["attempts"] += p_trys
                 
             else:
                 outproblems.append(h.td(f""))
@@ -223,8 +227,7 @@ def contestreport(params, user):
             *outproblems
         ))
 
-
-    lang_col = [h.td("#"),h.td("Title")]
+    lang_col = [h.td("#"), h.td("Title")]
     for lan in all_languages:
         lang_col.append(h.td(all_languages[lan]))
     lang_col.append(h.td("Total Count"))
@@ -256,7 +259,7 @@ def contestreport(params, user):
             h.td(total) if total > 0 else h.td("")
         ))
 
-    return Page(
+    return HttpResponse(Page(
         h2("FINAL STANDINGS", cls="page-title"),
         h.table(
             h.thead(h.tr(*reportcols)),
@@ -279,7 +282,8 @@ def contestreport(params, user):
             h.thead(h.tr(*lang_col)
             ),h.tbody(*LanguageDisplay)
         )
-    )
+    ))
+
 
 def score(submissions: list, contestStart, problemSummary) -> tuple:
     """ Given a list of submissions by a particular user, calculate that user's score.
@@ -339,6 +343,3 @@ def score(submissions: list, contestStart, problemSummary) -> tuple:
     
     # The user's score is dependent on the number of solved problems and the number of penalty points
     return solvedProbs, sampleProbs, int(penPoints)
-
-register.web("/leaderboard", "loggedin", leaderboard)
-register.web("/contestreport", "loggedin", contestreport)

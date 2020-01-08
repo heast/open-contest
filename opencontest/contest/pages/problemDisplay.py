@@ -1,12 +1,19 @@
-from code.util.db import Problem, Contest
-from code.generator.lib.htmllib import *
-from code.generator.lib.page import *
-from code.util import register
 import markdown2
+from django.http import HttpResponse, JsonResponse
+
+from contest.auth import logged_in_required
+from contest.models.contest import Contest
+from contest.models.problem import Problem
+from contest.models.submission import Submission
+from contest.models.user import User
+from contest.pages.lib import Card, Page
+from contest.pages.lib.htmllib import UIElement, div, h2, h, code_encode, h1
+
 
 def formatMD(md: str) -> str:
     """ Convert Markdown to HTML """
     return markdown2.markdown(md, extras=["tables"])
+
 
 class CodeEditor(UIElement):
     def __init__(self):
@@ -22,8 +29,10 @@ class CodeEditor(UIElement):
             ])
         ])
 
+
 class ProblemCard(UIElement):
     def __init__(self, prob: Problem, user: User):
+        # TODO: django-ize path name
         probpath = f"/problems/{prob.id}"
 
         btn = f"rejudgeAll('{prob.id}')" if user.isAdmin() else None
@@ -55,6 +64,7 @@ class ProblemCard(UIElement):
                 rejudge=btn
             )
 
+
 def getSample(datum, num: int) -> Card:
     if datum.input == None: datum.input = "" 
     if datum.output == None: datum.output = "" 
@@ -69,20 +79,23 @@ def getSample(datum, num: int) -> Card:
         ])
     ]))
 
-def viewProblem(params, user):
-    problem = Problem.get(params[0])
+
+@logged_in_required
+def viewProblem(request, *args, **kwargs):
+    problem = Problem.get(kwargs.get('id'))
+    user = User.get(request.COOKIES.get('user'))
     
     contest = Contest.getCurrent()
     
     if not problem:
-        return ""
+        return JsonResponse(data='', safe=False)
 
     if not user.isAdmin():
         # Hide the problems till the contest begins for non-admin users
         if not Contest.getCurrent():
-            return ""
+            return JsonResponse(data='', safe=False)
         if problem not in Contest.getCurrent().problems:
-            return ""
+            return JsonResponse(data='', safe=False)
     contents = []
     if contest == None or contest.showProblInfoBlocks == "On":
         contents = [
@@ -93,7 +106,7 @@ def viewProblem(params, user):
                 ]
     contents.append(div(cls="samples", contents=list(map(lambda x: getSample(x[0], x[1]), zip(problem.sampleData, range(problem.samples))))))
     
-    return Page(
+    return HttpResponse(Page(
         h.input(type="hidden", id="problem-id", value=problem.id),
         h2(problem.title, cls="page-title"),
         div(cls="problem-description", contents=contents),
@@ -107,35 +120,38 @@ def viewProblem(params, user):
             h.button("Test Code", cls="button test-samples button-white"),
             h.button("Submit Code", cls="button submit-problem")
         ])
-    )
+    ))
 
-def listProblems(params, user):
+
+@logged_in_required
+def listProblems(request):
     if Contest.getCurrent():
         contest = Contest.getCurrent()
         probCards = []
+        user = User.get(request.COOKIES.get('user'))
         for prob in contest.problems:            
             probCards.append(ProblemCard(prob, user))
 
-        return Page(
+        return HttpResponse(Page(
             h2("Problems", cls="page-title"),
             *probCards
-        )
+        ))
     elif Contest.getFuture():
         contest = Contest.getFuture()
-        return Page(
+        return HttpResponse(Page(
             h1("&nbsp;"),
             h1("Contest Starts in", cls="center"),
             h1(contest.start, cls="countdown jumbotron center")
-        )
+        ))
     elif Contest.getPast():
-        return Page(
+        return HttpResponse(Page(
             h1("&nbsp;"),
             h1("Contest is Over", cls="center")
-        )
-    return Page(
+        ))
+    return HttpResponse(Page(
         h1("&nbsp;"),
         h1("No Contest Created", cls="center")
-    )
+    ))
 
 register.web("/problems$", "loggedin", listProblems)
 register.web("/problems/([0-9a-f-]+)", "loggedin", viewProblem)

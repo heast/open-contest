@@ -1,9 +1,13 @@
-from code.util.db import Submission
-from code.generator.lib.htmllib import *
-from code.generator.lib.page import *
-from code.util import register
-from code.generator.pages.judge import verdict_name, icons
-import logging
+from django.http import HttpResponse
+
+from contest.auth import logged_in_required
+from contest.models.contest import Contest
+from contest.models.submission import Submission
+from contest.models.user import User
+from contest.pages.lib import Page
+from contest.pages.lib.htmllib import UIElement, h, div, code_encode, h2
+from contest.pages.judge import icons, verdict_name
+
 
 class SubmissionRow(UIElement):
     def __init__(self, sub):
@@ -18,6 +22,7 @@ class SubmissionRow(UIElement):
             ),
             onclick=f"submissionPopupContestant('{sub.id}')"
         )
+
 
 class SubmissionTable(UIElement):
     def __init__(self, subs):
@@ -35,6 +40,7 @@ class SubmissionTable(UIElement):
             ),
             id="mySubmissions"
         )
+
 
 class SubmissionCard(UIElement):
     def __init__(self, submission: Submission):
@@ -64,19 +70,22 @@ class SubmissionCard(UIElement):
             ])
         ])
 
-def getSubmissions(params, user):
+
+@logged_in_required
+def getSubmissions(request, *args, **kwargs):
     submissions = []
     
     cont = Contest.getCurrent()
     if not cont:
-        return ""
-    
+        return HttpResponse('')
+
+    user = User.get(request.COOKIES['user'])
     Submission.forEach(lambda x: submissions.append(x) if x.user.id == user.id and cont.start <= x.timestamp <= cont.end else None)
     if len(submissions) == 0:
-        return Page(
+        return HttpResponse(Page(
             h2("No Submissions Yet", cls="page-title"),
-        )
-    return Page(
+        ))
+    return HttpResponse(Page(
         h2("Your Submissions", cls="page-title"),
         SubmissionTable(sorted(submissions, key=lambda sub: (sub.problem.title, -sub.timestamp))),
         div(cls="modal", tabindex="-1", role="dialog", contents=[
@@ -84,10 +93,9 @@ def getSubmissions(params, user):
                 div(id="modal-content")
             ])
         ])
-    )
+    ))
 
-def contestant_submission(params, user):
-    return SubmissionCard(Submission.get(params[0]))
 
-register.web("/submissions", "loggedin", getSubmissions)
-register.web("/contestantSubmission/([a-zA-Z0-9-]*)", "loggedin", contestant_submission)
+@logged_in_required
+def contestant_submission(request, *args, **kwargs):
+    return HttpResponse(SubmissionCard(Submission.get(kwargs.get('id'))))

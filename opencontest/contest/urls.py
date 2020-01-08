@@ -1,14 +1,15 @@
 from django.urls import path
 
-from contest.UIElements.pages.contests import listContests, editContest
-from contest.UIElements.pages.judge import judge, judge_submission
-from contest.UIElements.pages.leaderboard import leaderboard
-from contest.UIElements.pages.messages import displayMessages
-from contest.UIElements.pages.problemDisplay import listProblems, viewProblem
-from contest.UIElements.pages.problemEdit import editProblem, newProblem, listProblemsAdmin
-from contest.UIElements.pages.static import setup, fake_privacy, privacy, faqs
-from contest.UIElements.pages.submissions import getSubmissions
-from contest.UIElements.pages.users import getUsers
+from contest.pages.contests import listContests, editContest
+from contest.pages.judge import judge, judge_submission, judge_submission_close
+from contest.pages.leaderboard import leaderboard, contestreport
+from contest.pages.messages import displayMessages
+from contest.pages.problemDisplay import listProblems, viewProblem
+from contest.pages.problemEdit import editProblem, newProblem, listProblemsAdmin
+from contest.pages.static import setup, fake_privacy, privacy, faqs, about
+from contest.pages.submissions import getSubmissions, contestant_submission
+from contest.pages.users import getUsers
+from contest.pages.correctlog import generateLogReport
 from contest.views.contests import deleteContest, createContest
 from contest.views.generic import login, root, logout
 from contest.views.messages import getMessages, sendMessage
@@ -22,6 +23,8 @@ urlpatterns = [
     path('privacy', privacy, name='privacy'),
     path('privacy2', fake_privacy, name='fake_privacy'),
     path('faqs', faqs, name='faqs'),
+    path('about', about, name='about'),
+    path('correctlog', generateLogReport, name='generateLogReport'),
 
     # logged in required
     path('', root, name='root'),
@@ -39,8 +42,10 @@ urlpatterns = [
 
     path('submit', submit, name='submit'),
     path('submissions', getSubmissions, name='getSubmissions'),
+    path('contestantSubmission/<uuid:id>', contestant_submission, name='contestant_submission'),
 
     path('leaderboard', leaderboard, name='leaderboard'),
+    path('contestreport', contestreport, name='contestreport'),
 
     # admin
     path('setup', setup, name='setup'),
@@ -61,7 +66,9 @@ urlpatterns = [
     path('createUser', createUser, name='createUser'),
     path('deleteUser', deleteUser, name='deleteUser'),
 
-    path('judgeSubmission/<uuid:id>', judge_submission, name='judge_submission'),
+    # TODO: how is this called? string 'True' or False? Bits?
+    path('judgeSubmission/<uuid:id>/<bool:force>', judge_submission, name='judge_submission'),
+    path('judgeSubmissionClose', judge_submission_close, name='judge_submission_close'),
     path('judge', judge, name='judge'),
     path('changeResult', changeResult, name='changeResult'),
     path('rejudge', rejudge, name='rejudge')

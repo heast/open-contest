@@ -1,15 +1,15 @@
 from django.http import HttpResponse
 
-from contest.UIElements.lib.page import Card, Page
 from contest.auth import admin_required
 from contest.models.user import User
-from contest.UIElements.lib.htmllib import UIElement, div, h, h2
+from contest.pages.lib import Card, Page
+from contest.pages.lib.htmllib import UIElement, div, h, h2
 
 
 class UserCard(UIElement):
     def __init__(self, user: User):
         cls = "blue" if user.isAdmin() else ""
-        self.html = div(cls="col-3", contents=[
+        self.html = div(cls="col-3", contents = [
             Card(
                 div(
                     h.strong(h.i("Username:"), cls="username-hidden"),
@@ -33,16 +33,16 @@ class UserCard(UIElement):
 def getUsers(request):
     userLists = []
     tmp = []
-
+    
     for user in User.all():
         tmp.append(user)
         if len(tmp) == 16:
             userLists.append(tmp)
             tmp = []
-
+    
     if tmp != []:
         userLists.append(tmp)
-
+    
     users = []
     for lst in userLists:
         users.append(div(*map(UserCard, lst), cls="page-break row"))
@@ -55,3 +55,5 @@ def getUsers(request):
         ]),
         div(cls="user-cards", contents=users)
     ))
+
+register.web("/users", "admin", getUsers)

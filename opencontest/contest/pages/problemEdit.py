@@ -1,24 +1,31 @@
-from code.generator.lib.htmllib import *
-from code.generator.lib.page import *
-from code.util import register
-from code.util.db import Problem
 from html import escape
-import logging
+
+from django.http import HttpResponse
+
+from contest.auth import admin_required
+from contest.models.problem import Problem
+from contest.pages.lib import Card, Page
+from contest.pages.lib.htmllib import UIElement, h2, div, p, h, code_encode
+from contest.pages.lib.page import Modal
+
 
 class ProblemCard(UIElement):
     def __init__(self, prob: Problem):
         self.html = Card(prob.title, prob.description, link=f"/problems/{prob.id}/edit", delete=f"deleteProblem('{prob.id}')", cls=prob.id)
 
-def listProblems(params, user):
+
+@admin_required
+def listProblemsAdmin(request):
     problems = []
     Problem.forEach(lambda prob: problems.append(ProblemCard(prob)))
-    return Page(
+    return HttpResponse(Page(
         h2("Problems", cls="page-title"),
         div(cls="actions", contents=[
             h.button("+ Create Problem", cls="button create-problem", onclick="window.location='/problems/new'")
         ]),
         div(cls="problem-cards", contents=problems)
-    )
+    ))
+
 
 class TestDataCard(UIElement):
     def __init__(self, x):
@@ -39,10 +46,12 @@ class TestDataCard(UIElement):
             ])
         ]), cls=cls, delete=f"deleteTestData({num})")
 
-def editProblem(params, user):
-    probId = params[0]
+
+@admin_required
+def editProblem(request, *args, **kwargs):
+    probId = kwargs.get('id')
     prob = Problem.get(probId)
-    return Page(
+    return HttpResponse(Page(
         h.input(type="hidden", id="prob-id", value=probId),
         h.input(type="hidden", id="pageId", value="Problem"),
         h2(prob.title, cls="page-title"),
@@ -103,10 +112,12 @@ def editProblem(params, user):
             )
         ),
         div(cls="test-data-cards", contents=list(map(TestDataCard, zip(range(prob.tests), prob.testData, [prob.samples] * prob.tests))))
-    )
+    ))
 
-def newProblem(params, user):
-    return Page(
+
+@admin_required
+def newProblem(request):
+    return HttpResponse(Page(
         h.input(type="hidden", id="prob-id", value=""),
         h.input(type="hidden", id="pageId", value="Problem"),
         h2("New Problem", cls="page-title"),
@@ -148,7 +159,7 @@ def newProblem(params, user):
                 h.button("Save", cls="button", onclick="editProblem()")
             ])
           ]))
-    )
+    ))
 
 register.web("/problems_mgmt", "admin", listProblems)
 register.web("/problems/([0-9a-f-]+)/edit", "admin", editProblem)

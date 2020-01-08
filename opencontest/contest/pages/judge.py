@@ -1,10 +1,15 @@
-from code.util import register
-from code.util.db import Contest, Problem, Submission, User
-from code.generator.lib.htmllib import *
-from code.generator.lib.page import *
-
 import logging
 from datetime import datetime
+
+from django.http import HttpResponse, JsonResponse
+
+from contest.auth import admin_required
+from contest.models.contest import Contest
+from contest.models.submission import Submission
+from contest.models.user import User
+from contest.pages.lib import Page
+from contest.pages.lib.htmllib import UIElement, h, div, code_encode, h1, h2
+
 
 class ProblemTab(UIElement):
     def __init__(self, x):
@@ -13,6 +18,7 @@ class ProblemTab(UIElement):
             h.a(prob.title, href=f"#tabs-{num}")
         )
 
+
 icons = {
     "ok": "check",
     "wrong_answer": "times",
@@ -20,8 +26,8 @@ icons = {
     "runtime_error": "exclamation-triangle",
     "presentation_error": "times",
     "extra_output": "times",
-    "incomplete_output" : "times",
-    "reject" : "times",
+    "incomplete_output": "times",
+    "reject": "times",
     "pending": "sync",
     "pending_review": "sync",
 }
@@ -38,6 +44,7 @@ verdict_name = {
     "pending_review": "Pending Review",
 }
 
+
 def resultOptions(result):
     ans = []
     for res in verdict_name:
@@ -49,6 +56,7 @@ def resultOptions(result):
             ans.append(h.option(verdict_name[res], value=res))
     return ans
 
+
 def statusOptions(status):
     ans = []
     for stat in ["Review", "Judged"]:
@@ -57,6 +65,7 @@ def statusOptions(status):
         else:
             ans.append(h.option((stat), value=stat))
     return ans
+
 
 class TestCaseTab(UIElement):
     def __init__(self, x, sub):
@@ -68,6 +77,7 @@ class TestCaseTab(UIElement):
                 f"{test_label} #{num}"
             ])
         )
+
 
 class TestCaseData(UIElement):
     def __init__(self, x, sub):
@@ -101,6 +111,7 @@ class TestCaseData(UIElement):
                 ])
             ])
         ])
+
 
 class SubmissionCard(UIElement):
     def __init__(self, submission: Submission, user, force):
@@ -154,11 +165,13 @@ class SubmissionCard(UIElement):
             ])
         ])
 
+
 class ProblemContent(UIElement):
     def __init__(self, x, cont):
         num, prob = x
         subs = filter(lambda sub: sub.problem == prob and cont.start <= sub.timestamp <= cont.end, Submission.all())
         self.html = div(*map(SubmissionCard, subs), id=f"tabs-{num}")
+
 
 class SubmissionRow(UIElement):
     def __init__(self, sub):
@@ -177,6 +190,7 @@ class SubmissionRow(UIElement):
             id=sub.id,
             cls="submit-row"
         )
+
 
 class SubmissionTable(UIElement):
     def __init__(self, contest):
@@ -202,15 +216,17 @@ class SubmissionTable(UIElement):
             id="submissions"
         )
 
+
+@admin_required
 def judge(params, user):
     cont = Contest.getCurrent()
     if not cont:
-        return Page(
+        return HttpResponse(Page(
             h1("&nbsp;"),
             h1("No Contest Available", cls="center")
-        )
+        ))
     
-    return Page(
+    return HttpResponse(Page(
         h2("Judge Submissions", cls="page-title judge-width"),
         div(id="judge-table", cls="judge-width", contents=[
             SubmissionTable(cont)
@@ -220,23 +236,28 @@ def judge(params, user):
                 div(id="modal-content")
             ])
         ])
-    )
+    ))
 
-def judge_submission(params, user):
-    submission = Submission.get(params[0])
-    force = params[1] == "force"
+@admin_required
+def judge_submission(request, *args, **kwargs):
+    submission = Submission.get(kwargs.get('id'))
+    user = User.get(request.COOKIES['user'])
+    force = kwargs.get('force') == "force"
     if submission.checkout is not None and not force:
         return f"CONFLICT:{User.get(submission.checkout).username}"
-    return SubmissionCard(submission, user, force)
+    # TODO: how does this work?
+    return HttpResponse(SubmissionCard(submission, user, force))
 
-def judge_submission_close(params, setHeader, user):
-    submission = Submission.get(params["id"])
-    if submission.version == int(params["version"]):
+
+def judge_submission_close(request):
+    submission = Submission.get(request.POST["id"])
+    user = User.get(request.COOKIES['user'])
+    if submission.version == int(request.POST["version"]):
         if submission.checkout == user.id:
             submission.checkout = None
         submission.save()
-    return "ok"
+    return JsonResponse('ok')
 
-register.web("/judgeSubmission/([a-zA-Z0-9-]*)(?:/(force))?", "admin", judge_submission)
-register.post("/judgeSubmissionClose", "admin", judge_submission_close)
-register.web("/judge", "admin", judge)
+# register.web("/judgeSubmission/([a-zA-Z0-9-]*)(?:/(force))?", "admin", judge_submission)
+# register.post("/judgeSubmissionClose", "admin", judge_submission_close)
+# register.web("/judge", "admin", judge)

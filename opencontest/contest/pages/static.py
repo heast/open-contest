@@ -1,8 +1,8 @@
 from django.http import HttpResponse
 
 from contest.auth import admin_required
-from contest.UIElements.lib.htmllib import div, h2, h, UIElement, h1
-from contest.UIElements.lib.page import uuid, Page, Card
+from contest.pages.lib.htmllib import UIElement, div, h, h2, h1
+from contest.pages.lib.page import uuid, Page, Card
 
 
 @admin_required
@@ -25,6 +25,32 @@ class FAQ(UIElement):
         )
 
 
+def about(request):
+    return HttpResponse(Page(
+        h2("About", cls="page-title"),
+        Card("The Creator", """
+        OpenContest was written by Nathan Collins, a senior computer science student at BJU,
+        as an independent study project in the fall of 2018.
+        """),
+        Card("Enhancements", """
+        Dr. Schaub's Internet Application Development class added several features in the
+        spring of 2019. The following students contributed enhancements:
+        <ul>
+        <li>Andrew Avinante, Carter Shean, Zac Hayes, and Robert Meyer contributed additional reports.</li>
+        <li>Noah Mansfield contributed the Auto Rejudge.</li>
+        <li>Ryan Longacre and Levi Lohmeyer contributed bug fixes.</li>
+        <li>Zac Hayes implemented the judge review queue.</li>
+        <li>Robert Meyer contributed the test with custom input feature.</li>
+        <li>Cole Stegall contributed the judge diff view.</li>
+        <li>Tim Kephart enhanced the autojudge and contributed the submission download feature.</li>
+        <li>Michael Bruno implemented per-problem time limits.</li>
+        <li>Michael Johannes implemented configurable problem information blocks.</li>
+        </ul>
+        """)
+    ))
+
+
+# Fake privacy policy for laughs
 def fake_privacy(request):
     return HttpResponse(Page(
         h2("Privacy Policy", cls="page-title"),
@@ -49,7 +75,8 @@ def privacy(request):
                     h.li("Any contest details created by the contest organizers"),
                     h.li("Any code submissions by contest participants")
                 )
-             )),
+             )
+        ),
         Card("Data usage",
              div(
                 h.span("Any data collected by OpenContest may be accessible to"),
@@ -59,8 +86,9 @@ def privacy(request):
                     h.li("Anyone in the world, though we have tried to eliminate this possibility")
                 ),
                 h.span("Any data collected in OpenContest is stored in plain text on the server that OpenContest is running on. " +
-                       "No data is not sent to the developers of OpenContest.")
-             ))
+                    "No data is not sent to the developers of OpenContest.")
+             )
+        )
     ))
 
 

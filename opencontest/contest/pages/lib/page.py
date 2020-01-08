@@ -1,10 +1,13 @@
-from code.util.db import Contest, Submission, User
-from .htmllib import *
 from datetime import datetime
 from uuid import uuid4
 
+from contest.models.contest import Contest
+from contest.pages.lib.htmllib import UIElement, div, h1, a, h2, h, head, body
+
+
 def uuid():
     return str(uuid4())
+
 
 class Header(UIElement):
     def __init__(self, title):
@@ -15,6 +18,7 @@ class Header(UIElement):
             ])
         ])
 
+
 class MenuItem(UIElement):
     def __init__(self, url, title, role="any"):
         self.html = div(role=role, cls="menu-item", contents=[
@@ -23,10 +27,12 @@ class MenuItem(UIElement):
             ])
         ])
 
+
 class Menu(UIElement):
     def __init__(self):
         self.html = div(cls="menu", contents=[
             div(cls="menu-items", contents=[
+                # TODO: django-ize the paths
                 MenuItem("/problems", "Problems"),
                 MenuItem("/leaderboard", "Leaderboard"),
                 MenuItem("/submissions", "My Submissions", role="participant"),
@@ -36,6 +42,7 @@ class Menu(UIElement):
                 MenuItem("/logout", "Logout")
             ])
         ])
+
 
 class Footer(UIElement):
     def __init__(self):
@@ -48,12 +55,14 @@ class Footer(UIElement):
             ])
         ])
 
+
 class Page(UIElement):
     def __init__(self, *bodyData):
         cont = Contest.getCurrent()
         title = cont.name if cont else "OpenContest"
         self.html = h.html(
             head(
+                # TODO: correct these paths
                 h.title(title),
                 h.link(rel="stylesheet", href="/static/lib/fontawesome/css/all.css", type="text/css"),
                 h.link(rel="stylesheet", href="/static/lib/bootstrap/css/bootstrap.min.css", type="text/css"),
@@ -78,11 +87,12 @@ class Page(UIElement):
                 Footer()
             )
         )
-    
+
     def setTitle(title):
         Page.title = title
-        from code.generator.pages.static import generateStatic
+        from contest.pages.static import generateStatic
         generateStatic()
+
 
 class Card(UIElement):
     def __init__(self, title, contents, link=None, cls=None, delete=None, reply=None, rejudge=None):
@@ -107,6 +117,7 @@ class Card(UIElement):
         ])
         if link != None:
             self.html = div(a(href=link, cls="card-link"), self.html, cls="card-link-box")
+
 
 class Modal(UIElement):
     def __init__(self, title, body, footer):

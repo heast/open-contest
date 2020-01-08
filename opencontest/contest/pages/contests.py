@@ -11,16 +11,16 @@ from contest.models.problem import Problem
 
 class ContestCard(UIElement):
     def __init__(self, contest: Contest):
-        self.html = Card(contest.name,
-                         div(
-                             h.span(contest.start, cls='time-format'),
-                             " - ",
-                             h.span(contest.end, cls='time-format')
-                         ),
-                         link=f"/contests/{contest.id}",
-                         delete=f"deleteContest('{contest.id}')",
-                         cls=contest.id
-                         )
+        self.html = Card(contest.name, 
+            div(
+                h.span(contest.start, cls='time-format', data_timestamp=contest.start),
+                " - ",
+                h.span(contest.end, cls='time-format', data_timestamp=contest.end)
+            ),
+            link=f"/contests/{contest.id}",
+            delete=f"deleteContest('{contest.id}')",
+            cls=contest.id
+        )
 
 
 @admin_required
@@ -37,13 +37,11 @@ def listContests(request):
 
 class ProblemCard(UIElement):
     def __init__(self, prob: Problem):
-        self.html = Card(prob.title, prob.description, link=f"/problems/{prob.id}/edit",
-                         delete=f"deleteContestProblem('{prob.id}')", cls=prob.id)
+        self.html = Card(prob.title, prob.description, link=f"/problems/{prob.id}/edit", delete=f"deleteContestProblem('{prob.id}')", cls=prob.id)
 
 
 @admin_required
-def editContest(request, *args, **kwargs):
-
+def editContest(prequest, *args, **kwargs):
     id = kwargs.get('id')
     contest = Contest.get(id)
 
@@ -53,11 +51,22 @@ def editContest(request, *args, **kwargs):
     start = time.time() * 1000
     end = (time.time() + 3600) * 1000
     scoreboardOff = end
+    showProblInfoBlocks = ""
+    showProblInfoBlocks_option = [
+        h.option("On", value="On"),
+        h.option("Off", value="Off")
+    ]
+    tieBreaker = False
     if contest:
         title = contest.name
         start = contest.start
         end = contest.end
-        scoreboardOff = contest.scoreboardOff
+        scoreboardOff = contest.scoreboardOff        
+        showProblInfoBlocks = contest.showProblInfoBlocks
+        if showProblInfoBlocks == "Off":
+            showProblInfoBlocks_option = [h.option("Off", value="Off"), h.option("On", value="On")]
+        tieBreaker = contest.tieBreaker        
+
         chooseProblem = div(cls="actions", contents=[
             h.button("+ Choose Problem", cls="button", onclick="chooseProblemDialog()")
         ])
@@ -73,13 +82,13 @@ def editContest(request, *args, **kwargs):
                     *problemOptions
                 ]),
                 div(
-                    h.button("Cancel", **{"type": "button", "class": "button button-white", "data-dismiss": "modal"}),
-                    h.button("Add Problem", **{"type": "button", "class": "button", "onclick": "chooseProblem()"})
+                    h.button("Cancel", **{"type":"button", "class": "button button-white", "data-dismiss": "modal"}),
+                    h.button("Add Problem", **{"type":"button", "class": "button", "onclick": "chooseProblem()"})
                 )
             ),
             div(cls="problem-cards", contents=problems)
         ]
-
+    
     return HttpResponse(Page(
         h.input(type="hidden", id="contest-id", value=id),
         h.input(type="hidden", id="pageId", value="Contest"),
@@ -88,33 +97,44 @@ def editContest(request, *args, **kwargs):
         Card("Contest Details", div(cls="contest-details", contents=[
             h.form(cls="row", contents=[
                 div(cls="form-group col-12", contents=[
-                    h.label(**{"for": "contest-name", "contents": "Name"}),
+                    h.label(**{"for": "contest-name", "contents":"Name"}),
                     h.input(cls="form-control", name="contest-name", id="contest-name", value=title)
                 ]),
                 h.input(type="hidden", id="start", value=start),
                 div(cls="form-group col-6", contents=[
-                    h.label(**{"for": "contest-start-date", "contents": "Start Date"}),
+                    h.label(**{"for": "contest-start-date", "contents":"Start Date"}),
                     h.input(cls="form-control", name="contest-start-date", id="contest-start-date", type="date")
                 ]),
                 div(cls="form-group col-6", contents=[
-                    h.label(**{"for": "contest-start-time", "contents": "Start Time"}),
+                    h.label(**{"for": "contest-start-time", "contents":"Start Time"}),
                     h.input(cls="form-control", name="contest-start-time", id="contest-start-time", type="time")
                 ]),
                 h.input(type="hidden", id="end", value=end),
                 div(cls="form-group col-6", contents=[
-                    h.label(**{"for": "contest-end-date", "contents": "End Date"}),
+                    h.label(**{"for": "contest-end-date", "contents":"End Date"}),
                     h.input(cls="form-control", name="contest-end-date", id="contest-end-date", type="date")
                 ]),
                 div(cls="form-group col-6", contents=[
-                    h.label(**{"for": "contest-end-time", "contents": "End Time"}),
+                    h.label(**{"for": "contest-end-time", "contents":"End Time"}),
                     h.input(cls="form-control", name="contest-end-time", id="contest-end-time", type="time")
                 ]),
-                h.input(type="hidden", id="scoreboardOff", value=scoreboardOff),
-                div(cls="form-group col-6"),
+                h.input(type="hidden", id="showProblInfoBlocks", value=showProblInfoBlocks),                
                 div(cls="form-group col-6", contents=[
-                    h.label(**{"for": "scoreboard-off-time", "contents": "Turn Scoreboard Off Time"}),
+                    h.label(**{"for": "show-problem-info-blocks", "contents":"Show Problem Info Blocks"}),
+                    h.select(cls="form-control custom-select", name="show-problem-info-blocks", id="show-problem-info-blocks", contents=showProblInfoBlocks_option)
+                ]),                               
+                h.input(type="hidden", id="scoreboardOff", value=scoreboardOff),
+                div(cls="form-group col-6", contents=[
+                    h.label(**{"for": "scoreboard-off-time", "contents":"Turn Scoreboard Off Time"}),
                     h.input(cls="form-control", name="scoreboard-off-time", id="scoreboard-off-time", type="time")
-                ])
+                ]),
+                div(cls="form-group col-6", contents=[
+                    h.label(**{"for": "scoreboard-tie-breaker", "contents":"Sample Data Breaks Ties"}),
+                    h.select(cls="form-control", name="scoreboard-tie-breaker", id="scoreboard-tie-breaker", contents=[
+                        *[h.option(text, value=val, selected="selected") if tieBreaker == val else
+                          h.option(text, value=val) for text, val in zip(("On", "Off"), (True, False))]
+                    ])
+                ]),
             ]),
             div(cls="align-right col-12", contents=[
                 h.button("Save", cls="button", onclick="editContest()")

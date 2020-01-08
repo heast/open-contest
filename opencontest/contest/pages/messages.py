@@ -1,10 +1,11 @@
 from django.http import HttpResponse
 
-from contest.UIElements.lib.htmllib import UIElement, h, div, h2, a
-from contest.UIElements.lib.page import Modal, Card, Page
 from contest.auth import logged_in_required
 from contest.models.message import Message
 from contest.models.user import User
+from contest.pages.lib import Card
+from contest.pages.lib.htmllib import UIElement, h, div, a, h2
+from contest.pages.lib.page import Modal, Page
 
 
 class MessageCard(UIElement):
@@ -37,7 +38,7 @@ def displayMessages(request, *args, **kwargs):
     user = User.get(request.COOKIES['user'])
 
     messages = []
-    if 'inbox' in request.path:
+    if INBOX in request.path:
         if user.isAdmin():
             inbox = {}
             Message.forEach(lambda msg: inbox.update({msg.id: msg}) if msg.isAdmin else None)
@@ -46,11 +47,9 @@ def displayMessages(request, *args, **kwargs):
             Message.forEach(lambda msg: inbox.pop(msg.replyTo) if msg.replyTo in inbox else None)
             messages = list(inbox.values())
         else:
-            Message.forEach(lambda msg: messages.append(msg) if (
-                    msg.toUser and msg.toUser.id == user.id or msg.fromUser == user or msg.isGeneral) else None
-                            )
+            Message.forEach(lambda msg: messages.append(msg) if (msg.toUser and msg.toUser.id == user.id or msg.fromUser == user or msg.isGeneral) else None)
 
-    elif 'processed' in request.path:
+    elif PROCESSED in request.path:
         def addReply(msg):
             if msg.replyTo in replies:
                 replies[msg.replyTo].append(msg)
@@ -62,14 +61,14 @@ def displayMessages(request, *args, **kwargs):
         Message.forEach(lambda msg: addReply(msg) if msg.replyTo else None)
 
         messages = [[Message.get(id)] + replies[id] for id in replies.keys()]
-    elif 'announcements' in request.path:
+
+    elif ANNOUNCEMENT in request.path:
         Message.forEach(lambda msg: messages.append(msg) if msg.isGeneral else None)
 
     if len(messages) > 0 and not isinstance(messages[0], list):
         messages = [[msg] for msg in messages]
 
-    messages = [
-        *map(lambda msglist: MessageCard(msglist, user), sorted(messages, key=lambda msglist: -msglist[0].timestamp))]
+    messages = [*map(lambda msglist: MessageCard(msglist, user), sorted(messages, key=lambda msglist: -msglist[0].timestamp))]
 
     adminDetails = []
     if user.isAdmin():
@@ -106,9 +105,11 @@ def displayMessages(request, *args, **kwargs):
                 h.textarea(cls="message col-12")
             ),
             div(
-                h.button("Cancel", **{"type": "button", "class": "button button-white", "data-dismiss": "modal"}),
-                h.button("Send", **{"type": "button", "class": "button", "onclick": "sendMessage()"})
+                h.button("Cancel", **{"type":"button", "class": "button button-white", "data-dismiss": "modal"}),
+                h.button("Send", **{"type":"button", "class": "button", "onclick": "sendMessage()"})
             )
         ),
         div(cls="message-cards", contents=messages),
     ))
+
+register.web("/messages/([a-z]+)", "loggedin", getMessages)
