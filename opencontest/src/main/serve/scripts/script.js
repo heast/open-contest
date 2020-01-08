@@ -7,6 +7,29 @@
 /*--------------------------------------------------------------------------------------------------
 General page code
 --------------------------------------------------------------------------------------------------*/
+    // Convert date string to Date object
+    function parseDateTime(strDate, strTime) {
+        var date = new Date(`${strDate}T${strTime}Z`);
+        return date.getTime() + (date.getTimezoneOffset() * 60000);
+    }
+
+    // Convert Date object to string with date portion
+    function formatDate(date) {
+        return `${date.getFullYear()}-${fix(date.getMonth() + 1)}-${fix(date.getDate())}`;
+    }
+
+    // Convert Date object to string with time portion
+    function formatTime(time) {
+        return `${fix(time.getHours())}:${fix(time.getMinutes())}`
+    }
+
+    // HTML Encode 
+    function htmlEncode(msg) {
+        if (!msg)
+            msg = ''
+        return msg.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    }
+
     // from https://www.quirksmode.org/js/cookies.html
     function readCookie(name) {
         var nameEQ = name + "=";
@@ -25,10 +48,12 @@ General page code
         });
     }
 
+    var userLoginTime = 0;
     var userType = "";
     var user = "";
     function setupMenu() {
         if (document.cookie) {
+            userLoginTime = Number(readCookie("userLoginTime"));
             userType = readCookie("userType");
             user = readCookie("user");
         }
@@ -50,7 +75,8 @@ General page code
         displayIncomingMessages();
         if ($("#ace-editor").length > 0) {
             setupAceEditor();
-            setupSortability();
+            // Comment out the following to disable draggable info blocks:
+            // setupSortability();
         }
         if (pageName == "Users") {
             displayExistingUsers();
@@ -65,21 +91,24 @@ General page code
         }
         $(".result-tabs").tabs();
         // $(".tablesorter").tablesorter();
-        var props = {  
-            sort: true,  
-            filters_row_index:1,  
-            remember_grid_values: true,  
+        var props = {
+            sort: true,
+            filters_row_index:1,
+            remember_grid_values: true,
             alternate_rows: true,
-            custom_slc_options: {  
+            custom_slc_options: {
                 cols:[],
                 texts: [],
                 values: [],
-                sorts: []
+                sorts: [],
             }
-        }  
-    if ($("#submissions").length) {
-        var tf = setFilterGrid("submissions",props); 
-    }
+        };
+        if ($("#submissions").length) {
+            var tf = new TableFilter("submissions", props);
+            tf.init();
+            tf.setFilterValue(5, "Review");
+            tf.filter();
+        }
     });
 /*--------------------------------------------------------------------------------------------------
 Problem page
@@ -114,7 +143,7 @@ Problem page
                 languages = JSON.parse(localStorage.languages);
                 res();
             } else {
-                $.post("/static/languages.json", {}, data => {
+                $.get("/static/languages.json", {}, data => {
                     localStorage.languages = JSON.stringify(data);
                     languages = JSON.parse(localStorage.languages);
                     res();
@@ -137,7 +166,7 @@ Problem page
             if (localStorage[language] != undefined) {
                 res(localStorage[language]);
             } else {
-                $.post("/static/examples/" + languages[language].example, {}, data => {
+                $.get("/static/examples/" + languages[language].example, {}, data => {
                     localStorage[language] = data;
                     res(data);
                 });
@@ -160,60 +189,87 @@ Problem page
 
     var icons = {
         "ok": "check",
+        "extra_output": "times",
+        "incomplete_output": "times",
         "wrong_answer": "times",
         "tle": "clock",
-        "runtime_error": "exclamation-triangle"
+        "runtime_error": "exclamation-triangle",
+        "presentation_error": "times",
+        "reject" : "times",
+        "pending": "sync",
+        "pending_review": "sync",
     };
     var verdict_name = {
         "ok": "Accepted",
+        "extra_output": "Extra Output",
+        "incomplete_output": "Incomplete Output",
         "wrong_answer": "Wrong Answer",
         "tle": "Time Limit Exceeded",
-        "runtime_error": "Runtime Error"
+        "runtime_error": "Runtime Error",
+        "presentation_error": "Presentation Error",
+        "reject": "Submission Rejected",
+        "pending": "Executing ...",
+        "pending_review": "Pending Review",
     };
 
+    function encodeText(msg) {
+        return htmlEncode(msg).replace(/\n/g, "<br/>").replace(/ /g, "&nbsp;")
+    }
+
     function showResults(sub) {
-        if (sub.results == "compile_error") {
+        if (sub.results == "internal_error") {
+            $(".results.card .card-contents").html(`
+                <h3>Unexpected Error</h3>
+                <p>${sub.error}</p>
+            `);
+        } else if (sub.results == "compile_error") {
             $(".results.card .card-contents").html(`
                 <h3>Compile Error</h3>
-                <code>${sub.compile.replace(/\n/g, "<br/>").replace(/ /g, "&nbsp;")}</code>
+                <code>${encodeText(sub.compile)}</code>
             `);
-        } else if (sub.type == "test") {
+        } else if (sub.type == "test" || sub.type == "custom") {
             var tabs = "";
             var results = "";
             var samples = sub.results.length;
+            if(sub.type == "custom"){
+                samples = 1;
+            }
             for (var i = 0; i < samples; i ++) {
                 var res = sub.results[i];
                 var icon = icons[res];
-                tabs += `<li><a href="#tabs-${i}"><i class="fa fa-${icon}" title="${verdict_name[res]}"></i> Sample #${i}</a></li>`;
-
+                var tabLabel = (sub.type == "custom") ? "Custom" : `Test #${i}`
+                tabs += `<li><a href="#tabs-${i}"><i class="fa fa-${icon}" title="${verdict_name[res]}"></i> ${tabLabel}</a></li>`;
+                
                 var input = sub.inputs[i];
                 var output = sub.outputs[i];
                 var error = sub.errors[i];
-                var answer = sub.answers[i];
+                var answer = (sub.type == "custom") ? "N/A" : sub.answers[i];
                 var errorStr = `<div class="col-12">
                     <h4>Stderr Output</h4>
-                    <code>${error.replace(/\n/g, "<br/>").replace(/ /g, "&nbsp;")}</code>
+                    <code>${encodeText(error)}</code>
                 </div>`;
                 if (!error) {
                     errorStr = "";
                 }
+
                 results += `<div id="tabs-${i}">
                     <div class="row">
                         <div class="col-12">
                             <h4>Input</h4>
-                            <code>${input.replace(/\n/g, "<br/>").replace(/ /g, "&nbsp;")}</code>
+                            <code>${encodeText(input)}</code>
                         </div>
                         <div class="col-6">
                             <h4>Your Output</h4>
-                            <code>${output.replace(/\n/g, "<br/>").replace(/ /g, "&nbsp;")}</code>
+                            <code>${encodeText(output)}</code>
                         </div>
                         <div class="col-6">
                             <h4>Correct Answer</h4>
-                            <code>${answer.replace(/\n/g, "<br/>").replace(/ /g, "&nbsp;")}</code>
+                            <code>${encodeText(answer)}</code>
                         </div>
                         ${errorStr}
                     </div>
                 </div>`;
+                
             }
             $(".results.card .card-contents").html(`<div id="result-tabs">
                 <ul>
@@ -275,7 +331,7 @@ Problem page
             $(".submit-problem").attr("disabled", true);
             $(".submit-problem").addClass("button-gray");
             $(".test-samples").attr("disabled", true);
-            $(".test-samples").addClass("button-gray");
+            $(".test-samples").addClass("button-gray");            
         }
 
         function enableButtons() {
@@ -285,29 +341,36 @@ Problem page
             $(".test-samples").removeClass("button-gray");
         }
 
-        // When you click the submit button, submit the code to the server
-        $("button.submit-problem").click(_ => {
+        // submit or test code
+        $("button.test-samples, button.submit-problem").click(function() {
             createResultsCard();
             var code = editor.getValue();
+            var input = $("#custom-input").val();
+
+            var type = $(this).text() == "Submit Code" ? "submit" :
+                        $("#use-custom-input")[0].checked ? "custom" :
+                            "test";
+
             disableButtons();
-            $.post("/submit", {problem: thisProblem, language: language, code: code, type: "submit"}, results => {
+            $.post("/submit", {
+                problem: thisProblem, language: language, code: code, type: type, input: input
+            }).done(function(results) {
                 enableButtons();
                 showResults(results);
+            }).fail(function() {
+                enableButtons();
+                showResults({ results: 'internal_error', error: 'Unexpected problem testing your submission. Please notify the contest administrator.' });
             });
         });
 
-        // When you click the test code button, test the code
-        $("button.test-samples").click(_ => {
-            createResultsCard();
-            var code = editor.getValue();
-            disableButtons();
-            $.post("/submit", {problem: thisProblem, language: language, code: code, type: "test"}, results => {
-                enableButtons();
-                showResults(results);
-            });
-        });
+        $("#use-custom-input").change(function() {
+            $(".blk-custom-input").css('display', this.checked ? 'block' : 'none');
+        })
+
+        $(".blk-custom-input").css('display', 'none');
     }
 
+    // Allow problem info blocks to be sorted
     function setupSortability() {
         var thisProblem = $("#problem-id").val();
         if (localStorage["sort-" + thisProblem] != undefined) {
@@ -415,10 +478,13 @@ Contest page
         var endDate = $("#contest-end-date").val();
         var endTime = $("#contest-end-time").val();
         var scoreboardOffTime = $("#scoreboard-off-time").val();
+        var showProblInfoBlocks = $("#show-problem-info-blocks").val();
 
-        var start = new Date(`${startDate} ${startTime}`).getTime();
-        var end = new Date(`${endDate} ${endTime}`).getTime();
-        var endScoreboard = new Date(`${endDate} ${scoreboardOffTime}`).getTime();
+        var tieBreaker = $("#scoreboard-tie-breaker").val();
+
+        var start = parseDateTime(startDate, startTime);
+        var end = parseDateTime(endDate, endTime);
+        var endScoreboard = parseDateTime(endDate, scoreboardOffTime);
 
         if (end <= start) {
             alert("The end of the contest must be after the start.");
@@ -446,7 +512,9 @@ Contest page
             problems.push(newProblem);
         }
 
-        $.post("/editContest", {id: id, name: name, start: start, end: end, scoreboardOff: endScoreboard, problems: JSON.stringify(problems)}, id => {
+        $.post("/editContest", {id: id, name: name, start: start, end: end, scoreboardOff: endScoreboard, 
+            showProblInfoBlocks: showProblInfoBlocks, tieBreaker: tieBreaker.toString(), 
+            problems: JSON.stringify(problems)}, id => {
             if (window.location.pathname == "/contests/new") {
                 window.location = `/contests/${id}`;
             } else {
@@ -466,15 +534,15 @@ Contest page
     var problemsHere = {};
     function setupContestPage() {
         var start = new Date(parseInt($("#start").val()));
-        $("#contest-start-date").val(`${start.getFullYear()}-${fix(start.getMonth() + 1)}-${fix(start.getDate())}`);
-        $("#contest-start-time").val(`${fix(start.getHours())}:${fix(start.getMinutes())}`);
+        $("#contest-start-date").val(formatDate(start));
+        $("#contest-start-time").val(formatTime(start));
         
         var end = new Date(parseInt($("#end").val()));
-        $("#contest-end-date").val(`${end.getFullYear()}-${fix(end.getMonth() + 1)}-${fix(end.getDate())}`);
-        $("#contest-end-time").val(`${fix(end.getHours())}:${fix(end.getMinutes())}`);
+        $("#contest-end-date").val(formatDate(end));
+        $("#contest-end-time").val(formatTime(end));
 
         var endScoreboard = new Date(parseInt($("#scoreboardOff").val()));
-        $("#scoreboard-off-time").val(`${fix(endScoreboard.getHours())}:${fix(endScoreboard.getMinutes())}`);
+        $("#scoreboard-off-time").val(formatTime(endScoreboard));
 
         $("div.problem-cards").sortable({
             placeholder: "ui-state-highlight",
@@ -539,11 +607,13 @@ Problem page
         var id = $("#prob-id").val();
         var problem = {id: id};
         problem.title       = $("#problem-title").val();
-        problem.description = $("#problem-description").val();
+        problem.timelimit   = $("#problem-timelimit").val();
+        problem.description = $("#problem-description").val();        
         problem.statement   = mdEditors[0].value();
         problem.input       = mdEditors[1].value();
         problem.output      = mdEditors[2].value();
         problem.constraints = mdEditors[3].value();
+        
         problem.samples     = $("#problem-samples").val();
         testData = [];
         $(".test-data-cards .card").each((_, card) => {
@@ -598,8 +668,10 @@ General
     async function fixFormatting() {
         $(".time-format").each((_, span) => {
             var timestamp = $(span).text();
-            var d = new Date(parseInt(timestamp));
-            $(span).text(d.toLocaleString());
+            if ($.isNumeric(timestamp)) {
+                var d = new Date(parseInt(timestamp));
+                $(span).text(d.toLocaleString());
+            }
         });
         await getLanguages();
         $("span.language-format").each((_, span) => {
@@ -653,7 +725,7 @@ Messages Page
         $.post("/getMessages", {timestamp: lastChecked}, messages => {
             lastChecked = messages.timestamp
             for (message of messages.messages) {
-                if (message.id in seenMessages || message.from.id == user) {
+                if (message.id in seenMessages || message.from.id == user || message.timestamp < userLoginTime) {
                     continue;
                 }
                 showIncomingMessage(message);
@@ -667,9 +739,25 @@ Messages Page
 /*--------------------------------------------------------------------------------------------------
 Judging Page
 --------------------------------------------------------------------------------------------------*/
-    function changeSubmissionResult(id) {
+    // Page initialization
+    $(function() {
+        // Handle change event for result-choice dropdown in submission popup
+        $('.modal-dialog').on('change', '.result-choice', function() {
+            $(".status-choice").val("Judged");
+        });
+
+        $('.submit-row').click(function() {
+            if ($(this).text().indexOf("Executing") == -1) {
+                submissionPopup($(this).attr('id'));
+            }
+        });
+
+    })
+
+    function changeSubmissionResult(id, version) {
         var result = $(`.result-choice.${id}`).val();
-        $.post("/changeResult", {id: id, result: result}, result => {
+        var status = $(`.status-choice.${id}`).val();
+        $.post("/changeResult", {id: id, result: result, status: status, version: version}, result => {
             if (result == "ok") {
                 window.location.reload();
             } else {
@@ -678,8 +766,26 @@ Judging Page
         })
     }
 
-    function submissionPopup(id) {
-        $.post(`/judgeSubmission/${id}`, {}, data => {
+    function submissionPopup(id, force) {
+        var url = `/judgeSubmission/${id}` + (force ? "/force" : "");
+        $.post(url, {}, data => {
+            if (data.startsWith("CONFLICT") && !force) {
+                var otherJudge = data.slice(data.indexOf(":")+1, data.length);
+                if (window.confirm(`${otherJudge} is already reviewing this submission. Do you want to override with your review?`))
+                    submissionPopup(id, true);
+            }
+            else {
+                $(".modal-dialog").html(data);
+                $(".result-tabs").tabs();
+                fixFormatting();
+
+                $(".modal").modal().click(() => $.post("/judgeSubmissionClose", {id: id, version: $("#version").val()} ));
+            }
+        });
+    }
+
+    function submissionPopupContestant(id) {
+        $.post(`/contestantSubmission/${id}`, {}, data => {
             $(".modal-dialog").html(data);
             $(".result-tabs").tabs();
             fixFormatting();
@@ -695,5 +801,72 @@ Judging Page
             $(".rejudge").attr("disabled", false);
             $(".rejudge").removeClass("button-gray");
             alert(`New Result: ${verdict_name[data]}`);
+            $(".result-choice").val(data);
         });
+    }
+  
+    function rejudgeAll(id)
+    {
+        if (!confirm('This will invoke the auto judge on all submissions for this problem. Are you sure you wish to continue?'))
+            return;
+        
+        $(".btn-primary").attr("disabled", true);
+
+
+        $.post("/rejudgeAll", {id:id}, data =>{
+            
+            $(".btn-primary").attr("disabled", false);
+            alert(data);
+        });
+    }
+
+    
+
+    function download(id) {
+        $(".rejudge").attr("disabled", true);
+        $(".rejudge").addClass("button-gray");
+
+        $.post("/download", {id: id}, data => {
+            $(".rejudge").attr("disabled", false);
+            $(".rejudge").removeClass("button-gray");
+            file = JSON.parse(data)
+            jQuery.each(file, (name, value) => {
+                byteCharacters = atob(value)
+                const byteNumbers = new Array(byteCharacters.length)
+                for (let i = 0; i < byteCharacters.length; i++) {
+                    byteNumbers[i] = byteCharacters.charCodeAt(i)
+                }
+                const byteArray = new Uint8Array(byteNumbers);
+                saveAs(new Blob([byteArray], {type: "application/zip"}, name))
+            })
+            
+        });
+    }
+    
+    function getDiff(output, answer) {
+
+
+        let color = '',
+        span = '';
+
+        outArr = output.split("\n");
+        ansArr = answer.split("\n");
+
+        let diff = Diff.diffArrays(ansArr, outArr),
+            fragment = "";
+
+        diff.forEach(function(part){{
+        // green for additions, red for deletions
+        // grey for common parts
+            color = part.added ? 'darkgreen' :
+                part.removed ? 'darkred' : 'dimgrey';
+            bgcolor = (color == 'darkgreen') ? ';background-color:palegreen' :
+                (color == 'darkred') ? ';background-color:#F6B0B0' : ''
+            part.value.forEach(function(item) {
+                span = '<div style="color:{0}{1}">{2}<br/></div>'.replace("{0}", color).replace("{1}", bgcolor).replace("{2}", item.replace(/ /g, "&nbsp;"));
+                fragment += span;
+            });
+        }});
+        return fragment;
+            
     }

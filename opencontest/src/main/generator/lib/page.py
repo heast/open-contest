@@ -1,4 +1,4 @@
-from code.util.db import Contest
+from code.util.db import Contest, Submission, User
 from .htmllib import *
 from datetime import datetime
 from uuid import uuid4
@@ -10,7 +10,8 @@ class Header(UIElement):
     def __init__(self, title):
         self.html = div(cls="top", contents=[
             div(cls="header", contents=[
-                h1(title)
+                h1(title),
+                # p(f"User: {User.getCurrentUser().username}")
             ])
         ])
 
@@ -42,7 +43,7 @@ class Footer(UIElement):
             h2('Copyright &copy; {} by <a href="https://nathantheinventor.com" target="_blank">Nathan Collins</a>'.format(datetime.now().year)),
             div(cls="footer-links", contents=[
                 h.span(h.a("Privacy Policy", href="/privacy", target="_blank")),
-                h.span(h.a("About", href="https://github.com/nathantheinventor/open-contest/", target="_blank")),
+                h.span(h.a("About", href="/about", target="_blank")),
                 h.span(h.a("FAQs", href="/faqs", target="_blank"))
             ])
         ])
@@ -65,7 +66,9 @@ class Page(UIElement):
                 h.script(src="/static/lib/ace/ace.js"),
                 h.script(src="/static/lib/simplemde/simplemde.min.js"),
                 h.script(src="/static/scripts/script.js?" + uuid()),
-                h.script(src="/static/lib/tablefilter_all_min.js")
+                h.script(src="/static/lib/tablefilter/tablefilter.js"),
+                h.script(src="/static/lib/FileSaver.min.js"),
+                h.script(src="/static/lib/diff.min.js"),
             ),
             body(
                 Header(title),
@@ -82,7 +85,7 @@ class Page(UIElement):
         generateStatic()
 
 class Card(UIElement):
-    def __init__(self, title, contents, link=None, cls=None, delete=None, reply=None):
+    def __init__(self, title, contents, link=None, cls=None, delete=None, reply=None, rejudge=None):
         if cls == None:
             cls = "card"
         else:
@@ -91,10 +94,13 @@ class Card(UIElement):
         if delete:
             deleteLink = div(h.i("clear", cls="material-icons"), cls="delete-link", onclick=delete)
         elif reply:
-            deleteLink = div("Reply", cls="delete-link", onclick=reply)
+            deleteLink = div(h.button("Reply", cls="btn btn-primary", onclick=reply), cls="delete-link")
+        if rejudge:
+            deleteLink = div(h.button("Rejudge", cls="btn btn-primary", onclick=rejudge), cls="delete-link")
+
         self.html = h.div(cls=cls, contents=[
             div(cls="card-header", contents=[
-                h2(title, cls="card-title"),
+                h2(contents=[title], cls="card-title"),
                 deleteLink
             ]),
             div(cls="card-contents", contents=contents)
