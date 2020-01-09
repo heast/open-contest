@@ -22,4 +22,3 @@ def deleteUser(request):
     user = User.getByName(username)
     user.delete()
     return JsonResponse("ok", safe=False)
-

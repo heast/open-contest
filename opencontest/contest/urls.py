@@ -14,7 +14,7 @@ from contest.views.contests import deleteContest, createContest
 from contest.views.generic import login, root, logout
 from contest.views.messages import getMessages, sendMessage
 from contest.views.problems import deleteProblem, createProblem
-from contest.views.submit import submit, changeResult, rejudge
+from contest.views.submit import submit, changeResult, rejudge, download, rejudgeAll
 from contest.views.users import createUser, deleteUser
 
 app_name = 'contest'
@@ -71,5 +71,7 @@ urlpatterns = [
     path('judgeSubmissionClose', judge_submission_close, name='judge_submission_close'),
     path('judge', judge, name='judge'),
     path('changeResult', changeResult, name='changeResult'),
-    path('rejudge', rejudge, name='rejudge')
+    path('rejudge', rejudge, name='rejudge'),
+    path('download', download, name='download'),
+    path('rejudgeAll', rejudgeAll, name='rejudgeAll')
 ]

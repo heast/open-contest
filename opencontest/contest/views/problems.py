@@ -29,6 +29,7 @@ def createProblem(request):
     testData = json.loads(request.POST["testData"])
     problem.testData = [Datum(d["input"], d["output"]) for d in testData]
     problem.tests = len(testData)
+    problem.timelimit = request.POST["timelimit"]
 
     problem.save()
 
