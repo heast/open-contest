@@ -55,5 +55,3 @@ def getUsers(request):
         ]),
         div(cls="user-cards", contents=users)
     ))
-
-register.web("/users", "admin", getUsers)

@@ -67,7 +67,7 @@ urlpatterns = [
     path('deleteUser', deleteUser, name='deleteUser'),
 
     # TODO: how is this called? string 'True' or False? Bits?
-    path('judgeSubmission/<uuid:id>/<bool:force>', judge_submission, name='judge_submission'),
+    path('judgeSubmission/<uuid:id>/<str:force>', judge_submission, name='judge_submission'),
     path('judgeSubmissionClose', judge_submission_close, name='judge_submission_close'),
     path('judge', judge, name='judge'),
     path('changeResult', changeResult, name='changeResult'),

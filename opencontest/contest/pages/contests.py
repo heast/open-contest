@@ -2,11 +2,12 @@ import time
 
 from django.http import HttpResponse
 
-from contest.UIElements.lib.htmllib import UIElement, div, h, h2
-from contest.UIElements.lib.page import Modal, Card, Page
 from contest.auth import admin_required
 from contest.models.contest import Contest
 from contest.models.problem import Problem
+from contest.pages.lib import Card, Page
+from contest.pages.lib.htmllib import UIElement, div, h, h2
+from contest.pages.lib.page import Modal
 
 
 class ContestCard(UIElement):

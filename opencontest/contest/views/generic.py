@@ -11,7 +11,7 @@ from contest.pages.lib.htmllib import div, h2, h
 
 @logged_in_required
 def root(request):
-    return redirect(reverse('problems'))
+    return HttpResponseRedirect('/problems')
 
 
 def login(request):
@@ -43,8 +43,7 @@ def login(request):
 
 
 def logout(request):
-    # TODO: is 'login' or 'contest:login'?
-    resp = HttpResponseRedirect(reverse('login'))
+    resp = HttpResponseRedirect('/login')
     resp.set_cookie('user', 'deleted', expires='Thu, 01 Jan 1970 00:00:00 GMT;')
     resp.set_cookie('userType', 'deleted', expires='Thu, 01 Jan 1970 00:00:00 GMT;')
     return resp

@@ -160,7 +160,3 @@ def newProblem(request):
             ])
           ]))
     ))
-
-register.web("/problems_mgmt", "admin", listProblems)
-register.web("/problems/([0-9a-f-]+)/edit", "admin", editProblem)
-register.web("/problems/new", "admin", newProblem)
