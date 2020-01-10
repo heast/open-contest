@@ -12,12 +12,12 @@ class Datum:
     def __init__(self, input, output):
         self.input = input
         self.output = output
-
+    
     def get(id: str, num: int):
         input = getKey(f"/problems/{id}/input/in{num}.txt")
         output = getKey(f"/problems/{id}/output/out{num}.txt")
         return Datum(input, output)
-
+    
     def toJSON(self):
         return {
             "input": self.input,
@@ -26,6 +26,7 @@ class Datum:
 
 
 class Problem:
+    default_timelimit = 5
     saveCallbacks = []
 
     def __init__(self, id=None):
@@ -38,10 +39,11 @@ class Problem:
             self.input = details["input"]
             self.output = details["output"]
             self.constraints = details["constraints"]
-            self.samples = int(details["samples"])
-            self.tests = int(details["tests"])
+            self.samples = int(details["samples"])  # Number of sample test cases
+            self.tests = int(details["tests"])    # Total number of test cases
             self.sampleData = [Datum.get(id, i) for i in range(self.samples)]
             self.testData = [Datum.get(id, i) for i in range(self.tests)]
+            self.timelimit = details.get("timelimit", str(Problem.default_timelimit))  # Time limit in seconds
         else:
             self.id = None
             self.title = None
@@ -54,25 +56,27 @@ class Problem:
             self.tests = 0
             self.sampleData = []
             self.testData = []
+            self.timelimit = str(Problem.default_timelimit)
 
     @staticmethod
-    def get(id: uuid4):
+    def get(id: str):
         with lock.gen_rlock():
-            if str(id) in problems:
-                return problems[str(id)]
+            if id in problems:
+                return problems[id]
             return None
-
+    
     def toJSONSimple(self):
         return {
-            "id": self.id,
-            "title": self.title,
+            "id":          self.id,
+            "title":       self.title,
             "description": self.description,
-            "statement": self.statement,
-            "input": self.input,
-            "output": self.output,
+            "statement":   self.statement,
+            "input":       self.input,
+            "output":      self.output,
             "constraints": self.constraints,
-            "samples": self.samples,
-            "tests": self.tests,
+            "samples":     self.samples,
+            "tests":       self.tests,
+            "timelimit":   self.timelimit
         }
 
     def save(self):
@@ -88,18 +92,18 @@ class Problem:
 
         for callback in Problem.saveCallbacks:
             callback(self)
-
+    
     def delete(self):
         with lock.gen_wlock():
             deleteKey(f"/problems/{self.id}")
             del problems[self.id]
-
+        
     def toJSON(self):
         with lock.gen_rlock():
             json = self.toJSONSimple()
             json.sampleData = [datum.toJSON() for datum in self.sampleData]
             return json
-
+    
     def toJSONFull(self):
         json = self.toJSONSimple()
         json["testData"] = [datum.toJSON() for datum in self.testData]
@@ -109,12 +113,12 @@ class Problem:
     def allJSON():
         with lock.gen_rlock():
             return [problems[id].toJSONSimple() for id in problems]
-
+    
     def forEach(callback: callable):
         with lock.gen_rlock():
             for id in problems:
                 callback(problems[id])
-
+    
     def onSave(callback: callable):
         Problem.saveCallbacks.append(callback)
 

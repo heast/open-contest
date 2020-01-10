@@ -1,5 +1,5 @@
-from uuid import uuid4
 import time
+from uuid import uuid4
 from readerwriterlock import rwlock
 
 from contest.models.problem import Problem
@@ -21,22 +21,27 @@ class Contest:
             self.start = int(details["start"])
             self.end = int(details["end"])
             self.scoreboardOff = int(details.get("scoreboardOff", self.end))
+            self.showProblInfoBlocks = details.get("showProblInfoBlocks","Off")
             self.problems = [Problem.get(id) for id in details["problems"]]
+            self.tieBreaker = str(details.get("tieBreaker", "")) == "true"
+
         else:
             self.id = None
             self.name = None
             self.start = None
             self.end = None
             self.scoreboardOff = None
-            self.problems = None
+            self.showProblInfoBlocks = None
+            self.problems = None                        
+            self.tieBreaker = False          
 
     @staticmethod
     def get(id: str):
         with lock.gen_rlock():
-            if str(id) in contests:
-                return contests[str(id)]
+            if id in contests:
+                return contests[id]
             return None
-
+    
     def toJSONSimple(self):
         return {
             "id": self.id,
@@ -44,7 +49,9 @@ class Contest:
             "start": self.start,
             "end": self.end,
             "scoreboardOff": self.scoreboardOff,
-            "problems": [prob.id for prob in self.problems]
+            "showProblInfoBlocks": self.showProblInfoBlocks,
+            "problems": [prob.id for prob in self.problems],            
+            "tieBreaker": self.tieBreaker
         }
 
     def save(self):
@@ -55,12 +62,12 @@ class Contest:
             setKey(f"/contests/{self.id}/contest.json", self.toJSONSimple())
         for callback in Contest.saveCallbacks:
             callback(self)
-
+    
     def delete(self):
         with lock.gen_wlock():
             deleteKey(f"/contests/{self.id}")
             del contests[self.id]
-
+    
     def toJSON(self):
         with lock.gen_rlock():
             return {
@@ -68,19 +75,20 @@ class Contest:
                 "name": self.name,
                 "start": self.start,
                 "end": self.end,
-                "problems": [prob.toJSONSimple() for prob in self.problems]
+                "problems": [prob.toJSONSimple() for prob in self.problems],
+                "tieBreaker": self.tieBreaker
             }
 
     @staticmethod
     def allJSON():
         with lock.gen_rlock():
             return [contests[id].toJSON() for id in contests]
-
+    
     def forEach(callback: callable):
         with lock.gen_rlock():
             for id in contests:
                 callback(contests[id])
-
+    
     def onSave(callback: callable):
         Contest.saveCallbacks.append(callback)
 

@@ -1,9 +1,6 @@
 import json
 import os
-import logging
 import shutil
-
-# logger = logging.Logger(__name__)
 
 
 def ensureExists(file: str, isDir: bool = False):
@@ -12,7 +9,6 @@ def ensureExists(file: str, isDir: bool = False):
         if part == "":
             continue
         cur += part + "/"
-        print(cur)
         if not os.path.isdir(cur):
             os.mkdir(cur)
 
@@ -40,7 +36,7 @@ def setKey(key: str, value):
 
 def listSubKeys(key: str) -> list:
     ensureExists("/db" + key + "/file.json")
-    return [x for x in os.listdir("../db" + key) if not x.startswith(".")]
+    return [x for x in os.listdir("/db" + key) if not x.startswith(".")]
 
 
 def deleteKey(key: str):

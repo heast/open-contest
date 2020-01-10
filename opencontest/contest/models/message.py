@@ -19,7 +19,7 @@ class Message:
             self.fromUser = User.get(details["from"])
             self.toUser = User.get(details["to"])
             self.isGeneral = bool(details["general"])
-            self.isAdmin = bool(details["admin"])  # Message sent to admin
+            self.isAdmin = bool(details["admin"])   # Message sent to admin
             self.message = details["message"]
             self.timestamp = float(details["timestamp"])
             self.replyTo = details.get("replyTo")
@@ -34,22 +34,22 @@ class Message:
             self.replyTo = None
 
     @staticmethod
-    def get(id: uuid4):
+    def get(id: str):
         with lock.gen_rlock():
-            if str(id) in messages:
-                return messages[str(id)]
+            if id in messages:
+                return messages[id]
             return None
-
+    
     def toJSONSimple(self):
         return {
-            "id": self.id,
-            "from": self.fromUser.id,
-            "to": self.toUser.id if self.toUser else None,
-            "general": self.isGeneral,
-            "admin": self.isAdmin,
-            "message": self.message,
+            "id":        self.id,
+            "from":      self.fromUser.id,
+            "to":        self.toUser.id if self.toUser else None,
+            "general":   self.isGeneral,
+            "admin":     self.isAdmin,
+            "message":   self.message,
             "timestamp": self.timestamp,
-            "replyTo": self.replyTo
+            "replyTo":   self.replyTo
         }
 
     def save(self):
@@ -60,20 +60,20 @@ class Message:
             setKey(f"/messages/{self.id}/message.json", self.toJSONSimple())
         for callback in Message.saveCallbacks:
             callback(self)
-
+    
     def delete(self):
         with lock.gen_wlock():
             deleteKey(f"/messages/{self.id}")
             del messages[self.id]
-
+        
     def toJSON(self):
         return {
-            "id": self.id,
-            "from": self.fromUser.toJSON(),
-            "to": self.toUser.toJSON() if self.toUser else {},
-            "general": self.isGeneral,
-            "admin": self.isAdmin,
-            "message": self.message,
+            "id":        self.id,
+            "from":      self.fromUser.toJSON(),
+            "to":        self.toUser.toJSON() if self.toUser else {},
+            "general":   self.isGeneral,
+            "admin":     self.isAdmin,
+            "message":   self.message,
             "timestamp": self.timestamp
         }
 
@@ -81,10 +81,10 @@ class Message:
         with lock.gen_rlock():
             for id in messages:
                 callback(messages[id])
-
+    
     def onSave(callback: callable):
         Message.saveCallbacks.append(callback)
-
+    
     def messagesSince(timestamp: float) -> list:
         with lock.gen_rlock():
             return [messages[id] for id in messages if messages[id].timestamp >= timestamp]

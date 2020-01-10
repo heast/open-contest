@@ -1,10 +1,13 @@
 from uuid import uuid4
 import logging
+import threading
 
 from contest.models.simple import setKey, getKey
 
 users = {}
 userNames = {}
+
+# perThread = threading.local()
 
 
 class User:
@@ -17,9 +20,9 @@ class User:
         self.type = type
 
     @staticmethod
-    def get(id: uuid4):
-        if str(id) in users:
-            return users[str(id)]
+    def get(id: str):
+        if id in users:
+            return users[id]
         return None
 
     @staticmethod
@@ -27,15 +30,15 @@ class User:
         if username in userNames:
             return userNames[username]
         return None
-
+    
     def save(self):
         if self.id == None:
-            self.id = str(uuid4())
+            self.id = f"{self.username}-{uuid4()}"
             users[self.id] = self
             userNames[self.username] = self
         usrs = [users[id].toJSON() for id in users]
         setKey("/users.json", usrs)
-
+    
     def toJSON(self):
         return {
             "id": self.id,
@@ -47,14 +50,23 @@ class User:
     @staticmethod
     def allJSON():
         return [users[id].toJSON() for id in users]
-
+    
     def delete(self):
         del users[self.id]
         del userNames[self.username]
         self.save()
-
+    
     def isAdmin(self) -> bool:
         return self.type == "admin"
+
+    # def getCurrentUser():
+    #     """Returns instance of User that represents current user"""
+    #     logging.info(f"Getting current user:  {threading.get_ident()}")
+    #     return perThread.user
+
+    # def setCurrentUser(user):
+    #     logging.info(f"Setting current user: {user.username} {threading.get_ident()}")
+    #     perThread.user = user
 
     @staticmethod
     def all():
