@@ -96,6 +96,7 @@ General page code
             filters_row_index:1,
             remember_grid_values: true,
             alternate_rows: true,
+            base_path: '/static/lib/tablefilter/',
             custom_slc_options: {
                 cols:[],
                 texts: [],
