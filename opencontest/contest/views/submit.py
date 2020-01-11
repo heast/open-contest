@@ -19,9 +19,6 @@ from contest.models.submission import Submission
 from contest.models.user import User
 
 
-# TODO: check file paths
-
-
 def addSubmission(probId, lang, code, user, type, custominput):
     sub = Submission()
     sub.problem = Problem.get(probId)
@@ -140,7 +137,6 @@ def runCode(sub: Submission, user: User) -> list:
         os.makedirs(f"/tmp/{sub.id}/out", exist_ok=True)
 
         # Run the runner
-        # cmd = f"docker run --rm --network=none -m 256MB -v /tmp/{sub.id}/:/source nathantheinventor/open-contest-dev-{sub.language}-runner {numTests} {prob.timelimit} > /tmp/{sub.id}/result.txt"
         cmd = f"docker run --rm --network=none -m 256MB -v /tmp/{sub.id}/:/source heast/oc-test-{sub.language}-runner {numTests} {prob.timelimit} 5 > /tmp/{sub.id}/result.txt"
         logging.debug(cmd)        
         if os.system(cmd) != 0:
@@ -294,7 +290,7 @@ def download(request):
     submission = Submission.get(id)
 
     buf = io.BytesIO()
-    with ZipFile(buf,'w') as zip:
+    with ZipFile(buf, 'w') as zip:
         sourceFile = f"source.{exts[submission.language]}"
         zip.writestr(sourceFile, submission.code)
 

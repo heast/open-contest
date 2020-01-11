@@ -86,7 +86,7 @@ def privacy(request):
                     h.li("Anyone in the world, though we have tried to eliminate this possibility")
                 ),
                 h.span("Any data collected in OpenContest is stored in plain text on the server that OpenContest is running on. " +
-                    "No data is not sent to the developers of OpenContest.")
+                       "No data is not sent to the developers of OpenContest.")
              )
         )
     ))

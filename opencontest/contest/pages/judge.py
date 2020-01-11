@@ -1,6 +1,3 @@
-import logging
-from datetime import datetime
-
 from django.http import HttpResponse, JsonResponse
 
 from contest.auth import admin_required
@@ -226,18 +223,6 @@ def judge(request):
             h1("&nbsp;"),
             h1("No Contest Available", cls="center")
         ))
-    print('---')
-    print(Page(
-        h2("Judge Submissions", cls="page-title judge-width"),
-        div(id="judge-table", cls="judge-width", contents=[
-            SubmissionTable(cont)
-        ]),
-        div(cls="modal", tabindex="-1", role="dialog", contents=[
-            div(cls="modal-dialog", role="document", contents=[
-                div(id="modal-content")
-            ])
-        ])
-    ))
     return HttpResponse(Page(
         h2("Judge Submissions", cls="page-title judge-width"),
         div(id="judge-table", cls="judge-width", contents=[
@@ -258,7 +243,6 @@ def judge_submission(request, *args, **kwargs):
     force = kwargs.get('force') == "force"
     if submission.checkout is not None and not force:
         return f"CONFLICT:{User.get(submission.checkout).username}"
-    # TODO: how does this work?
     return HttpResponse(SubmissionCard(submission, user, force))
 
 
@@ -270,7 +254,3 @@ def judge_submission_close(request):
             submission.checkout = None
         submission.save()
     return JsonResponse('ok')
-
-# register.web("/judgeSubmission/([a-zA-Z0-9-]*)(?:/(force))?", "admin", judge_submission)
-# register.post("/judgeSubmissionClose", "admin", judge_submission_close)
-# register.web("/judge", "admin", judge)

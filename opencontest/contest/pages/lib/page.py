@@ -14,7 +14,6 @@ class Header(UIElement):
         self.html = div(cls="top", contents=[
             div(cls="header", contents=[
                 h1(title),
-                # p(f"User: {User.getCurrentUser().username}")
             ])
         ])
 
@@ -32,7 +31,6 @@ class Menu(UIElement):
     def __init__(self):
         self.html = div(cls="menu", contents=[
             div(cls="menu-items", contents=[
-                # TODO: django-ize the paths
                 MenuItem("/problems", "Problems"),
                 MenuItem("/leaderboard", "Leaderboard"),
                 MenuItem("/submissions", "My Submissions", role="participant"),
@@ -86,11 +84,6 @@ class Page(UIElement):
                 Footer()
             )
         )
-
-    def setTitle(title):
-        Page.title = title
-        from contest.pages.static import generateStatic
-        generateStatic()
 
 
 class Card(UIElement):

@@ -1,7 +1,6 @@
 import logging
 from uuid import uuid4
 from readerwriterlock import rwlock
-import os.path
 
 from contest.models.contest import Contest
 from contest.models.problem import Problem
@@ -9,7 +8,6 @@ from contest.models.simple import getKey, setKey, deleteKey, listSubKeys
 from contest.models.user import User
 
 lock = rwlock.RWLockWrite()
-
 submissions = {}
 
 
@@ -148,9 +146,6 @@ class Submission:
                 del submissions[self.id]
         
     def toJSON(self):
-        print('now in self.toJSON:', self.id)
-        print(self.user)
-        print(self.problem)
         with lock.gen_rlock():
             
             return {

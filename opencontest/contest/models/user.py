@@ -1,13 +1,9 @@
 from uuid import uuid4
-import logging
-import threading
 
 from contest.models.simple import setKey, getKey
 
 users = {}
 userNames = {}
-
-# perThread = threading.local()
 
 
 class User:
@@ -58,15 +54,6 @@ class User:
     
     def isAdmin(self) -> bool:
         return self.type == "admin"
-
-    # def getCurrentUser():
-    #     """Returns instance of User that represents current user"""
-    #     logging.info(f"Getting current user:  {threading.get_ident()}")
-    #     return perThread.user
-
-    # def setCurrentUser(user):
-    #     logging.info(f"Setting current user: {user.username} {threading.get_ident()}")
-    #     perThread.user = user
 
     @staticmethod
     def all():

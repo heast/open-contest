@@ -42,8 +42,6 @@ def parseCookie(cookie):
 def getUser(cookie):
     if cookie == None:
         return None
-    # logging.debug("Parsing cookie {}".format(cookie))
-    # cookie = parseCookie(cookie)
     if "user" in cookie:
         return User.get(cookie["user"])
     return None

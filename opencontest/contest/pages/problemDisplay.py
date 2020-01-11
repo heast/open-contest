@@ -32,7 +32,6 @@ class CodeEditor(UIElement):
 
 class ProblemCard(UIElement):
     def __init__(self, prob: Problem, user: User):
-        # TODO: django-ize path name
         probpath = f"/problems/{prob.id}"
 
         btn = f"rejudgeAll('{prob.id}')" if user.isAdmin() else None
