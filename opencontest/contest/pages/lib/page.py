@@ -62,7 +62,6 @@ class Page(UIElement):
         title = cont.name if cont else "OpenContest"
         self.html = h.html(
             head(
-                # TODO: correct these paths
                 h.title(title),
                 h.link(rel="stylesheet", href="/static/lib/fontawesome/css/all.css", type="text/css"),
                 h.link(rel="stylesheet", href="/static/lib/bootstrap/css/bootstrap.min.css", type="text/css"),

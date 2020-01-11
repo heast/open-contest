@@ -148,6 +148,9 @@ class Submission:
                 del submissions[self.id]
         
     def toJSON(self):
+        print('now in self.toJSON:', self.id)
+        print(self.user)
+        print(self.problem)
         with lock.gen_rlock():
             
             return {

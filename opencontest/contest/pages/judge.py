@@ -215,17 +215,29 @@ class SubmissionTable(UIElement):
             ),
             id="submissions"
         )
+        print(self.html)
 
 
 @admin_required
-def judge(params, user):
+def judge(request):
     cont = Contest.getCurrent()
     if not cont:
         return HttpResponse(Page(
             h1("&nbsp;"),
             h1("No Contest Available", cls="center")
         ))
-    
+    print('---')
+    print(Page(
+        h2("Judge Submissions", cls="page-title judge-width"),
+        div(id="judge-table", cls="judge-width", contents=[
+            SubmissionTable(cont)
+        ]),
+        div(cls="modal", tabindex="-1", role="dialog", contents=[
+            div(cls="modal-dialog", role="document", contents=[
+                div(id="modal-content")
+            ])
+        ])
+    ))
     return HttpResponse(Page(
         h2("Judge Submissions", cls="page-title judge-width"),
         div(id="judge-table", cls="judge-width", contents=[
@@ -237,6 +249,7 @@ def judge(params, user):
             ])
         ])
     ))
+
 
 @admin_required
 def judge_submission(request, *args, **kwargs):

@@ -42,7 +42,7 @@ class ProblemCard(UIElement):
 
 
 @admin_required
-def editContest(prequest, *args, **kwargs):
+def editContest(request, *args, **kwargs):
     id = kwargs.get('id')
     contest = Contest.get(id)
 

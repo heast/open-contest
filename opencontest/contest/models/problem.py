@@ -59,7 +59,8 @@ class Problem:
             self.timelimit = str(Problem.default_timelimit)
 
     @staticmethod
-    def get(id: str):
+    def get(id: uuid4):
+        id: str = str(id)
         with lock.gen_rlock():
             if id in problems:
                 return problems[id]

@@ -36,7 +36,8 @@ class Contest:
             self.tieBreaker = False          
 
     @staticmethod
-    def get(id: str):
+    def get(id: uuid4):
+        id: str = str(id)
         with lock.gen_rlock():
             if id in contests:
                 return contests[id]
