@@ -307,4 +307,4 @@ def download(request):
                 
     data = {"download.zip": base64.b64encode(buf.getvalue()).decode('ascii')}
     
-    return JsonResponse(json.dumps(data))
+    return JsonResponse(json.dumps(data), safe=False)
