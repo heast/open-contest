@@ -41,6 +41,7 @@ def addSubmission(probId, lang, code, user, type, custominput):
 
     return sub
 
+
 exts = {
     "c": "c",
     "cpp": "cpp",
@@ -220,7 +221,7 @@ def runCode(sub: Submission, user: User) -> list:
 # Process contestant test or submission
 @logged_in_required
 def submit(request, *args, **kwargs):
-    user = request.COOKIES['user']
+    user = User.get(request.COOKIES['user'])
     probId = request.POST["problem"]
     lang = request.POST["language"]
     code = request.POST["code"]
